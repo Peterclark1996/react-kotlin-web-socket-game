@@ -1,0 +1,7 @@
+package events
+
+enum class EventType {
+    INBOUND_USER_JOINED_ROOM,
+    OUTBOUND_ROOM_USERS_UPDATED,
+    OUTBOUND_USER_JOINED_ROOM_RESULT
+}
