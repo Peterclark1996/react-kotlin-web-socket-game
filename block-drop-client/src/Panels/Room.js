@@ -5,31 +5,23 @@ import { generateHtmlId } from '../helpers'
 const roomUsersUpdatedEventId = generateHtmlId()
 
 const Room = ({ username }) => {
-    const { connection, on } = useWebSocket()
+    const { connectionState, on, send } = useWebSocket()
 
     const [players, setPlayers] = useState([])
 
     const joinRoom = () => {
         if(username === ""){
             const desiredUsername = window.prompt("Name")
-            console.log("NAME", desiredUsername)
-            connection.send(
-                JSON.stringify(
-                    {
-                        type: "INBOUND_USER_JOINED_ROOM",
-                        jsonData: JSON.stringify({
-                            roomId: "testRoom",
-                            username: desiredUsername
-                        })
-                    }
-                )
-            )
+            send("INBOUND_USER_JOINED_ROOM", {
+                roomId: "testRoom",
+                username: desiredUsername
+            })
         }
     }
 
     const getStatus = () => {
-        if(connection.readyState === 0) return <span className="text-warning">Connecting</span>
-        if(connection.readyState === 1) return <span className="text-success">Connected</span>
+        if(connectionState === 0) return <span className="text-warning">Connecting</span>
+        if(connectionState === 1) return <span className="text-success">Connected</span>
         return <span className="text-danger">Disconnected</span>
     }
 
