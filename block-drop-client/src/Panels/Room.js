@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useWebSocket } from '../Contexts/WebSocketContext'
+import { generateHtmlId } from '../helpers'
+
+const roomUsersUpdatedEventId = generateHtmlId()
 
 const Room = ({ username }) => {
     const { connection, on } = useWebSocket()
@@ -31,7 +34,11 @@ const Room = ({ username }) => {
     }
 
     useEffect(() => {
-        on("OUTBOUND_ROOM_USERS_UPDATED", event => setPlayers(event.usernames))
+        on(
+            "OUTBOUND_ROOM_USERS_UPDATED", 
+            event => setPlayers(event.usernames), 
+            roomUsersUpdatedEventId
+        )
     }, [on])
 
     return(

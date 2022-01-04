@@ -7,13 +7,13 @@ const WebSocketContect = createContext()
 export const WebSocketProvider = props => {
     const [connection, setConnection] = useState({readyState: 3})
     const [connected, setConnected] = useState(false)
-    const [eventListeners, setEventListeners] = useState({})
+    const [eventListeners, setEventListeners] = useState([])
 
     const onEventReceived = useCallback(event => {
         const eventData = JSON.parse(event.data)
-        if(eventListeners[eventData.type]){
-            eventListeners[eventData.type].forEach(f => f(JSON.parse(eventData.jsonData)))
-        }
+        eventListeners
+            .filter(el => el.eventType === eventData.type)
+            .forEach(el => el.func(JSON.parse(eventData.jsonData)))
     }, [eventListeners])
 
     const connectToSocket = useCallback((socketUrl, retriesRemaining = 4) => {
@@ -60,22 +60,18 @@ export const WebSocketProvider = props => {
         
     }
 
-    const addListenerToSocket = useCallback((eventType, func) => {
-        if(eventListeners[eventType]){
+    const addListenerToSocket = useCallback((eventType, func, key) => {
+        if(typeof key !== "string") throw new Error(`Key must be provided when adding a socket listener for event type '${eventType}'`)
+        if(eventListeners.filter(el => el.key === key).length > 0) return
 
-            // TODO Replace this somehow. Worst case, demand callers to pass a key value
-            if(eventListeners[eventType].map(f => f.toString()).includes(func.toString())) return
-
-            setEventListeners({
-                ...eventListeners,
-                [eventType]: [...eventListeners[eventType], func]
-            })
-        }else{
-            setEventListeners({
-                ...eventListeners,
-                [eventType]: [func]
-            })
-        }
+        setEventListeners([
+            ...eventListeners,
+            {
+                eventType,
+                func,
+                key
+            }
+        ])
     }, [eventListeners])
 
     useEffect(() => connectToSocket(socketUrl), [connectToSocket])

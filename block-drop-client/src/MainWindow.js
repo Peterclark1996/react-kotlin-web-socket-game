@@ -4,6 +4,9 @@ import Room from './Panels/Room'
 import { useState } from 'react/cjs/react.development'
 import { useWebSocket } from './Contexts/WebSocketContext'
 import { useEffect } from 'react'
+import { generateHtmlId } from './helpers'
+
+const joinSuccessEventId = generateHtmlId()
 
 const MainWindow = () => {
     const { on } = useWebSocket()
@@ -11,11 +14,15 @@ const MainWindow = () => {
     const [username, setUsername] = useState("")
 
     useEffect(() => {
-        on("OUTBOUND_USER_JOINED_ROOM_RESULT", eventData => {
-            if(eventData.success){
-                setUsername(eventData.username)
-            }
-        })
+        on(
+            "OUTBOUND_USER_JOINED_ROOM_RESULT", 
+            eventData => {
+                if(eventData.success){
+                    setUsername(eventData.username)
+                }
+            },
+            joinSuccessEventId
+        )
     }, [on])
 
     return (
