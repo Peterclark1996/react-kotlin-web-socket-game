@@ -12,7 +12,7 @@ const Room = ({ username }) => {
     const joinRoom = () => {
         if(username === ""){
             const desiredUsername = window.prompt("Name")
-            send("INBOUND_USER_JOINED_ROOM", {
+            send("InboundUserJoinedRoom", {
                 roomId: "testRoom",
                 username: desiredUsername
             })
@@ -27,7 +27,7 @@ const Room = ({ username }) => {
 
     useEffect(() => {
         on(
-            "OUTBOUND_ROOM_USERS_UPDATED", 
+            "OutboundRoomUsersUpdated", 
             event => setPlayers(event.usernames), 
             roomUsersUpdatedEventId
         )

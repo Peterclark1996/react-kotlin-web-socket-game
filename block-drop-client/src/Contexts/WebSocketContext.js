@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 
 const socketUrl = "ws://localhost:8080/room"
+const maxRetries = 5
 
 const WebSocketContect = createContext()
 
@@ -22,7 +23,7 @@ export const WebSocketProvider = props => {
             .forEach(el => el.func(JSON.parse(eventData.jsonData)))
     }, [eventListeners])
 
-    const connectToSocket = useCallback((socketUrl, retriesRemaining = 4) => {
+    const connectToSocket = useCallback((socketUrl, retriesRemaining = maxRetries) => {
         if(hasFailedToConnect) return
 
         if(retriesRemaining === 0){
@@ -42,10 +43,10 @@ export const WebSocketProvider = props => {
         console.log("Socket connecting to:", socketUrl)
         setConnectionState(0)
 
-        const reconnectToSocketOnClose = (reason, retries = 4) => {
+        const reconnectToSocketOnClose = (reason, retries = maxRetries) => {
 
             setConnectionState(0)
-
+ 
             if(retries === 1){
                 setConnection()
                 setConnectionState(3)
@@ -54,10 +55,10 @@ export const WebSocketProvider = props => {
             }
 
             const nextAmountOfRetries = retries - 1
-            console.log(`Socket closed. Reconnect will be attempted in 5 seconds. ${nextAmountOfRetries} retr${nextAmountOfRetries === 1 ? "y" : "ies"} remaining.`, reason)
+            console.log(`Socket closed. Reconnect will be attempted in 3 seconds. ${nextAmountOfRetries} retr${nextAmountOfRetries === 1 ? "y" : "ies"} remaining.`, reason)
             setTimeout(() => {
                 connectToSocket(socketUrl, nextAmountOfRetries)
-            }, 1000)
+            }, 3000)
         }
 
         const newConnection = new WebSocket(socketUrl)

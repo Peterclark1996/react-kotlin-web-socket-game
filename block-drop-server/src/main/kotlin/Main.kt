@@ -1,9 +1,13 @@
 import arrow.core.flatMap
 import events.*
+import events.inbound.InboundUserJoinedRoom
+import events.outbound.OutboundRoomUsersUpdated
+import events.outbound.OutboundUserJoinedRoomResult
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.util.*
 
@@ -27,24 +31,15 @@ fun Application.module() {
             } catch (e: Exception) {
                 println("ERROR: $e")
             } finally {
-                println("Removing $currentConnection!")
                 connections -= currentConnection
                 if(!currentConnection.room.isNullOrBlank()){
                     connections.forEach {
-                        it.session.send(
-                            Json.encodeToString(
-                                Event.serializer(),
-                                Event(
-                                    EventType.OUTBOUND_ROOM_USERS_UPDATED,
-                                    Json.encodeToString(
-                                        OutboundRoomUsersUpdated.serializer(),
-                                        OutboundRoomUsersUpdated(
-                                            connections
-                                                .filter { c -> c.room == currentConnection.room }
-                                                .mapNotNull { c -> c.username }
-                                        )
-                                    )
-                                )
+                        it.session.sendEvent(
+                            OutboundRoomUsersUpdated.serializer(),
+                            OutboundRoomUsersUpdated(
+                                connections
+                                    .filter { c -> c.room == currentConnection.room }
+                                    .mapNotNull { c -> c.username }
                             )
                         )
                     }
@@ -59,38 +54,22 @@ suspend fun processEvent(
     currentConnection: Connection,
     connections: MutableSet<Connection>
 ) =
-    when (event.type) {
-        EventType.INBOUND_USER_JOINED_ROOM -> {
+    when(event.type) {
+        "InboundUserJoinedRoom" -> {
             decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).map { eventData ->
                 currentConnection.room = eventData.roomId
                 currentConnection.username = eventData.username
-                currentConnection.session.send(
-                    Json.encodeToString(
-                        Event.serializer(),
-                        Event(
-                            EventType.OUTBOUND_USER_JOINED_ROOM_RESULT,
-                            Json.encodeToString(
-                                OutboundUserJoinedRoomResult.serializer(),
-                                OutboundUserJoinedRoomResult(eventData.roomId, eventData.username, true)
-                            )
-                        )
-                    )
+                currentConnection.session.sendEvent(
+                    OutboundUserJoinedRoomResult.serializer(),
+                    OutboundUserJoinedRoomResult(eventData.roomId, eventData.username, true)
                 )
                 connections.forEach {
-                    it.session.send(
-                        Json.encodeToString(
-                            Event.serializer(),
-                            Event(
-                                EventType.OUTBOUND_ROOM_USERS_UPDATED,
-                                Json.encodeToString(
-                                    OutboundRoomUsersUpdated.serializer(),
-                                    OutboundRoomUsersUpdated(
-                                        connections
-                                            .filter { c -> c.room == eventData.roomId }
-                                            .mapNotNull { c -> c.username }
-                                    )
-                                )
-                            )
+                    it.session.sendEvent(
+                        OutboundRoomUsersUpdated.serializer(),
+                        OutboundRoomUsersUpdated(
+                            connections
+                                .filter { c -> c.room == eventData.roomId }
+                                .mapNotNull { c -> c.username }
                         )
                     )
                 }
@@ -98,3 +77,22 @@ suspend fun processEvent(
         }
         else -> Error("Event type not recognised: ${event.type}").asLeft()
     }
+
+suspend fun <T>DefaultWebSocketSession.sendEvent(
+    serializer: KSerializer<T>,
+    eventData: T
+) {
+    val eventType = eventData!!::class.simpleName ?: "UnknownEvent"
+    this.send(
+        Json.encodeToString(
+            Event.serializer(),
+            Event(
+                eventType,
+                Json.encodeToString(
+                    serializer,
+                    eventData
+                )
+            )
+        )
+    )
+}

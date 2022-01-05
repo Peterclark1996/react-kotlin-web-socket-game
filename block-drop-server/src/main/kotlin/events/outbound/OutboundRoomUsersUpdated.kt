@@ -1,4 +1,4 @@
-package events
+package events.outbound
 
 import kotlinx.serialization.Serializable
 

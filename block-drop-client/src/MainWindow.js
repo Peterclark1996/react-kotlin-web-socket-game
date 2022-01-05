@@ -15,7 +15,7 @@ const MainWindow = () => {
 
     useEffect(() => {
         on(
-            "OUTBOUND_USER_JOINED_ROOM_RESULT", 
+            "OutboundUserJoinedRoomResult", 
             eventData => {
                 if(eventData.success){
                     setUsername(eventData.username)
