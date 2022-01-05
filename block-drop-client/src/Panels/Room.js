@@ -13,7 +13,7 @@ const Room = ({ username }) => {
         if(username === ""){
             const desiredUsername = window.prompt("Name")
             send("InboundUserJoinedRoom", {
-                roomId: "testRoom",
+                room: "testRoom",
                 username: desiredUsername
             })
         }

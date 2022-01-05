@@ -3,4 +3,4 @@ package events.inbound
 import kotlinx.serialization.*
 
 @Serializable
-data class InboundUserJoinedRoom(val roomId: String, val username: String)
+data class InboundUserJoinedRoom(val room: String, val username: String)

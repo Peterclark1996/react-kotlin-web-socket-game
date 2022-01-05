@@ -1,14 +1,15 @@
+import arrow.core.Either
 import arrow.core.flatMap
-import events.*
+import events.Event
 import events.inbound.InboundUserJoinedRoom
 import events.outbound.OutboundRoomUsersUpdated
 import events.outbound.OutboundUserJoinedRoomResult
+import events.sendEvent
+import events.sendToRoom
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import java.util.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -32,17 +33,17 @@ fun Application.module() {
                 println("ERROR: $e")
             } finally {
                 connections -= currentConnection
-                if(!currentConnection.room.isNullOrBlank()){
-                    connections.forEach {
-                        it.session.sendEvent(
-                            OutboundRoomUsersUpdated.serializer(),
-                            OutboundRoomUsersUpdated(
-                                connections
-                                    .filter { c -> c.room == currentConnection.room }
-                                    .mapNotNull { c -> c.username }
-                            )
+                val room = currentConnection.room
+                if(!room.isNullOrBlank()){
+                    connections.sendToRoom(
+                        room,
+                        OutboundRoomUsersUpdated.serializer(),
+                        OutboundRoomUsersUpdated(
+                            connections
+                                .filter { c -> c.room == currentConnection.room }
+                                .mapNotNull { c -> c.username }
                         )
-                    }
+                    ).mapLeft { println("ERROR: $it") }
                 }
             }
         }
@@ -53,46 +54,32 @@ suspend fun processEvent(
     event: Event,
     currentConnection: Connection,
     connections: MutableSet<Connection>
-) =
+): Either<Error, Unit> =
     when(event.type) {
-        "InboundUserJoinedRoom" -> {
-            decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).map { eventData ->
-                currentConnection.room = eventData.roomId
+        "InboundUserJoinedRoom" ->
+            decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).flatMap { eventData ->
+                if(connections.any{c -> c.room == eventData.room && c.username?.lowercase() == eventData.username.lowercase()}){
+                    return currentConnection.sendEvent(
+                        OutboundUserJoinedRoomResult.serializer(),
+                        OutboundUserJoinedRoomResult(eventData.room, eventData.username, false)
+                    )
+                }
+                currentConnection.room = eventData.room
                 currentConnection.username = eventData.username
-                currentConnection.session.sendEvent(
+                return currentConnection.sendEvent(
                     OutboundUserJoinedRoomResult.serializer(),
-                    OutboundUserJoinedRoomResult(eventData.roomId, eventData.username, true)
-                )
-                connections.forEach {
-                    it.session.sendEvent(
+                    OutboundUserJoinedRoomResult(eventData.room, eventData.username, true)
+                ).flatMap {
+                    connections.sendToRoom(
+                        eventData.room,
                         OutboundRoomUsersUpdated.serializer(),
                         OutboundRoomUsersUpdated(
                             connections
-                                .filter { c -> c.room == eventData.roomId }
+                                .filter { c -> c.room == eventData.room }
                                 .mapNotNull { c -> c.username }
                         )
                     )
-                }
+                }.map { }
             }
-        }
         else -> Error("Event type not recognised: ${event.type}").asLeft()
     }
-
-suspend fun <T>DefaultWebSocketSession.sendEvent(
-    serializer: KSerializer<T>,
-    eventData: T
-) {
-    val eventType = eventData!!::class.simpleName ?: "UnknownEvent"
-    this.send(
-        Json.encodeToString(
-            Event.serializer(),
-            Event(
-                eventType,
-                Json.encodeToString(
-                    serializer,
-                    eventData
-                )
-            )
-        )
-    )
-}
