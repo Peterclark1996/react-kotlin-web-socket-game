@@ -4,20 +4,10 @@ import { generateHtmlId } from '../helpers'
 
 const roomUsersUpdatedEventId = generateHtmlId()
 
-const Room = ({ username }) => {
-    const { connectionState, on, send } = useWebSocket()
+const Room = () => {
+    const { connectionState, on } = useWebSocket()
 
     const [players, setPlayers] = useState([])
-
-    const joinRoom = () => {
-        if(username === ""){
-            const desiredUsername = window.prompt("Name")
-            send("InboundUserJoinedRoom", {
-                room: "testRoom",
-                username: desiredUsername
-            })
-        }
-    }
 
     const getStatus = () => {
         if(connectionState === 0) return <span className="text-warning">Connecting</span>
@@ -45,7 +35,6 @@ const Room = ({ username }) => {
                     players.map(username => <span key={username}>{username}</span>)
                 }
             </div>
-            {username === "" && <button onClick={joinRoom}>Join room</button>}
         </div>
     )
 }
