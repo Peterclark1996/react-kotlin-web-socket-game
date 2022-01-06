@@ -8,6 +8,7 @@ import { generateHtmlId } from './helpers'
 import Overlay from './Components/Overlay'
 
 const joinSuccessEventId = generateHtmlId()
+const joinFailEventId = generateHtmlId()
 
 const MainWindow = () => {
     const { on, send } = useWebSocket()
@@ -25,13 +26,14 @@ const MainWindow = () => {
 
     useEffect(() => {
         on(
-            "OutboundUserJoinedRoomResult", 
-            eventData => {
-                if(eventData.success){
-                    setUsername(eventData.username)
-                }
-            },
+            "OutboundUserJoinedRoomSuccess", 
+            eventData => setUsername(eventData.username),
             joinSuccessEventId
+        )
+        on(
+            "OutboundUserJoinedRoomFailure", 
+            eventData => alert(eventData.message),
+            joinFailEventId
         )
     }, [on])
 
@@ -40,19 +42,20 @@ const MainWindow = () => {
             {
                 username === "" && 
                     <Overlay>
-                        <div className="d-flex flex-column p-3">
+                        <div className="d-flex flex-column p-3 align-items-center">
                             <span className="mb-2">Block Drop or wtv game</span>
-                            <div className="d-flex justify-content-end mb-2">
+                            <div className="border my-2 w-100" />
+                            <div className="d-flex justify-content-end ms-auto mb-2">
                                 <span className="me-2">Code:</span>
                                 <input value={roomCodeInput} onChange={event => setRoomCodeInput(event.target.value)}/>
                             </div>
-                            <div className="d-flex justify-content-end mb-2">
+                            <div className="d-flex justify-content-end ms-auto mb-2">
                                 <span className="me-2">Name:</span>
                                 <input value={usernameInput} onChange={event => setUsernameInput(event.target.value)}/>
                             </div>
-                            <button onClick={onJoinGameClicked}>Join Game</button>
-                            <hr />
-                            <button disabled>Create Game</button>
+                            <div className="btn border" onClick={onJoinGameClicked}>Join Game</div>
+                            <div className="border my-2 w-100" />
+                            <div className="btn border" disabled>Create New Game</div>
                         </div>
                     </Overlay>
             }

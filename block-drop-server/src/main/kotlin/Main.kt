@@ -3,7 +3,8 @@ import arrow.core.flatMap
 import events.Event
 import events.inbound.InboundUserJoinedRoom
 import events.outbound.OutboundRoomUsersUpdated
-import events.outbound.OutboundUserJoinedRoomResult
+import events.outbound.OutboundUserJoinedRoomFailure
+import events.outbound.OutboundUserJoinedRoomSuccess
 import events.sendEvent
 import events.sendToRoom
 import io.ktor.application.*
@@ -60,15 +61,15 @@ suspend fun processEvent(
             decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).flatMap { eventData ->
                 if(connections.any{c -> c.room == eventData.room && c.username?.lowercase() == eventData.username.lowercase()}){
                     return currentConnection.sendEvent(
-                        OutboundUserJoinedRoomResult.serializer(),
-                        OutboundUserJoinedRoomResult(eventData.room, eventData.username, false)
+                        OutboundUserJoinedRoomFailure.serializer(),
+                        OutboundUserJoinedRoomFailure("Name already taken")
                     )
                 }
                 currentConnection.room = eventData.room
                 currentConnection.username = eventData.username
                 return currentConnection.sendEvent(
-                    OutboundUserJoinedRoomResult.serializer(),
-                    OutboundUserJoinedRoomResult(eventData.room, eventData.username, true)
+                    OutboundUserJoinedRoomSuccess.serializer(),
+                    OutboundUserJoinedRoomSuccess(eventData.room, eventData.username)
                 ).flatMap {
                     connections.sendToRoom(
                         eventData.room,
