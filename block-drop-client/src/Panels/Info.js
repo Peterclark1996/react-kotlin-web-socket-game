@@ -5,7 +5,7 @@ import { generateHtmlId } from '../helpers'
 const roomUsersUpdatedEventId = generateHtmlId()
 
 const Info = () => {
-    const { connectionState, on } = useWebSocket()
+    const { connectionState, on, send } = useWebSocket()
 
     const [players, setPlayers] = useState([])
 
@@ -14,6 +14,8 @@ const Info = () => {
         if(connectionState === 1) return <span className="text-success">Connected</span>
         return <span className="text-danger">Disconnected</span>
     }
+
+    useEffect(() => send("InboundRequestRoomUsers", {}), [send])
 
     useEffect(() => {
         on(

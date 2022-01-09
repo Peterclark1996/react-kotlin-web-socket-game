@@ -1,7 +1,8 @@
 import { useHistory } from 'react-router-dom'
-import { useState, useEffect } from 'react/cjs/react.development'
+import { useState, useEffect } from 'react'
 import Overlay from './Components/Overlay'
 import { useWebSocket } from './Contexts/WebSocketContext'
+import { useUsername } from './Contexts/UsernameContext'
 import { generateHtmlId, ROUTE_ROOM } from './helpers'
 
 const joinSuccessEventId = generateHtmlId()
@@ -9,6 +10,7 @@ const joinFailEventId = generateHtmlId()
 
 const Home = () => {
     const { on, send } = useWebSocket()
+    const { setUsername } = useUsername()
     const history = useHistory()
 
     const [roomCodeInput, setRoomCodeInput] = useState("")
@@ -24,7 +26,10 @@ const Home = () => {
     useEffect(() => {
         on(
             "OutboundUserJoinedRoomSuccess", 
-            eventData => history.push(`${ROUTE_ROOM}/${eventData.room}`),
+            eventData => {
+                setUsername(eventData.username)
+                history.push(`${ROUTE_ROOM}/${eventData.room}`)
+            },
             joinSuccessEventId
         )
         on(
@@ -32,7 +37,7 @@ const Home = () => {
             eventData => alert(eventData.message),
             joinFailEventId
         )
-    }, [history, on])
+    }, [history, on, setUsername])
 
     return(
         <div className="App d-flex justify-content-center align-items-center bg-dark">

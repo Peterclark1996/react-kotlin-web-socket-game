@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 const socketUrl = "ws://localhost:8080/room"
 const maxRetries = 5
 
-const WebSocketContect = createContext()
+const WebSocketContext = createContext()
 
 export const WebSocketProvider = props => {
     const [connection, setConnection] = useState()
@@ -99,15 +99,18 @@ export const WebSocketProvider = props => {
         ])
     }, [eventListeners])
 
-    const sendToSocket = (eventType, eventData) =>
-        connection.send(
-            JSON.stringify(
-                {
-                    type: eventType,
-                    jsonData: JSON.stringify(eventData)
-                }
+    const sendToSocket = (eventType, eventData) => {
+        if(connectionState === 1){
+            connection.send(
+                JSON.stringify(
+                    {
+                        type: eventType,
+                        jsonData: JSON.stringify(eventData)
+                    }
+                )
             )
-        )
+        }
+    }
 
     useEffect(() => connectToSocket(socketUrl), [connectToSocket])
 
@@ -119,7 +122,7 @@ export const WebSocketProvider = props => {
         send: sendToSocket
     }
 
-    return <WebSocketContect.Provider value={value} {...props} />
+    return <WebSocketContext.Provider value={value} {...props} />
 }
 
-export const useWebSocket = () => useContext(WebSocketContect)
+export const useWebSocket = () => useContext(WebSocketContext)

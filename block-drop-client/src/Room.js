@@ -1,8 +1,9 @@
 import Game from './Panels/Game'
 import Controls from './Panels/Controls'
 import Info from './Panels/Info'
-import { useState } from 'react/cjs/react.development'
+import { useState } from 'react'
 import { useWebSocket } from './Contexts/WebSocketContext'
+import { useUsername } from './Contexts/UsernameContext'
 import { useEffect } from 'react'
 import { generateHtmlId } from './helpers'
 import Overlay from './Components/Overlay'
@@ -12,8 +13,8 @@ const joinFailEventId = generateHtmlId()
 
 const Room = ({ match }) => {
     const { on, send } = useWebSocket()
+    const { username, setUsername } = useUsername()
 
-    const [username, setUsername] = useState("")
     const [usernameInput, setUsernameInput] = useState("")
 
     const onJoinGameClicked = () => {
@@ -34,7 +35,7 @@ const Room = ({ match }) => {
             eventData => alert(eventData.message),
             joinFailEventId
         )
-    }, [on])
+    }, [on, setUsername])
 
     return (
         <div className="App d-flex justify-content-center align-items-center bg-dark">

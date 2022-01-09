@@ -82,5 +82,16 @@ suspend fun processEvent(
                     )
                 }.map { }
             }
+        "InboundRequestRoomUsers" ->
+            if(!currentConnection.room.isNullOrEmpty())
+                currentConnection.sendEvent(
+                    OutboundRoomUsersUpdated.serializer(),
+                    OutboundRoomUsersUpdated(
+                        connections
+                            .filter { c -> c.room == currentConnection.room }
+                            .mapNotNull { c -> c.username }
+                    )
+                )
+            else Unit.asRight()
         else -> Error("Event type not recognised: ${event.type}").asLeft()
     }
