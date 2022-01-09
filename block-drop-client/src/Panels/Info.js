@@ -4,7 +4,7 @@ import { generateHtmlId } from '../helpers'
 
 const roomUsersUpdatedEventId = generateHtmlId()
 
-const Room = () => {
+const Info = () => {
     const { connectionState, on } = useWebSocket()
 
     const [players, setPlayers] = useState([])
@@ -39,4 +39,4 @@ const Room = () => {
     )
 }
 
-export default Room
+export default Info
