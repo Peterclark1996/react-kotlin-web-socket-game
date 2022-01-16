@@ -1,0 +1,1 @@
+data class Room(val roomCode: String)

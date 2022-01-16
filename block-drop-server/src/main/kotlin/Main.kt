@@ -18,7 +18,10 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module() {
     install(WebSockets)
     routing {
+
         val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
+        val rooms = Collections.synchronizedSet<Room?>(LinkedHashSet())
+
         webSocket("/room") {
             val currentConnection = Connection(this)
             connections += currentConnection
@@ -35,14 +38,12 @@ fun Application.module() {
             } finally {
                 connections -= currentConnection
                 val room = currentConnection.room
-                if(!room.isNullOrBlank()){
+                if (room != null) {
                     connections.sendToRoom(
                         room,
                         OutboundRoomUsersUpdated.serializer(),
                         OutboundRoomUsersUpdated(
-                            connections
-                                .filter { c -> c.room == currentConnection.room }
-                                .mapNotNull { c -> c.username }
+                            connections.getAllUsersInRoom(room)
                         )
                     ).mapLeft { println("ERROR: $it") }
                 }
@@ -56,10 +57,13 @@ suspend fun processEvent(
     currentConnection: Connection,
     connections: MutableSet<Connection>
 ): Either<Error, Unit> =
-    when(event.type) {
+    when (event.type) {
         "InboundUserJoinedRoom" ->
             decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).flatMap { eventData ->
-                if(connections.any{c -> c.room == eventData.room && c.username?.lowercase() == eventData.username.lowercase()}){
+                if (connections.any { c ->
+                        c.room == eventData.room && c.username
+                            ?.lowercase() == eventData.username.lowercase()
+                    }) {
                     return currentConnection.sendEvent(
                         OutboundUserJoinedRoomFailure.serializer(),
                         OutboundUserJoinedRoomFailure("Name already taken")
@@ -75,23 +79,19 @@ suspend fun processEvent(
                         eventData.room,
                         OutboundRoomUsersUpdated.serializer(),
                         OutboundRoomUsersUpdated(
-                            connections
-                                .filter { c -> c.room == eventData.room }
-                                .mapNotNull { c -> c.username }
+                            connections.getAllUsersInRoom(eventData.room)
                         )
                     )
                 }.map { }
             }
         "InboundRequestRoomUsers" ->
-            if(!currentConnection.room.isNullOrEmpty())
+            currentConnection.room.asEither().map { room ->
                 currentConnection.sendEvent(
                     OutboundRoomUsersUpdated.serializer(),
                     OutboundRoomUsersUpdated(
-                        connections
-                            .filter { c -> c.room == currentConnection.room }
-                            .mapNotNull { c -> c.username }
+                        connections.getAllUsersInRoom(room)
                     )
                 )
-            else Unit.asRight()
+            }.mapAsUnit()
         else -> Error("Event type not recognised: ${event.type}").asLeft()
     }

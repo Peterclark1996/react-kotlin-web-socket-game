@@ -5,6 +5,7 @@ import arrow.core.Either
 import asLeft
 import asRight
 import flatten
+import getAllConnectionsInRoom
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -41,6 +42,6 @@ suspend fun <T> Set<Connection>.sendToRoom(
     room: String,
     serializer: KSerializer<T>,
     eventData: T
-) = this.filter { c -> c.room == room }
+) = this.getAllConnectionsInRoom(room)
     .map { it.sendEvent(serializer, eventData) }
     .flatten()
