@@ -32,12 +32,6 @@ suspend fun <T> Connection.sendEvent(
     return Unit.asRight()
 }
 
-suspend fun <T> Set<Connection>.sendToAll(
-    serializer: KSerializer<T>,
-    eventData: T
-) = this.map { it.sendEvent(serializer, eventData) }
-    .flatten()
-
 suspend fun <T> Set<Connection>.sendToRoom(
     room: String,
     serializer: KSerializer<T>,

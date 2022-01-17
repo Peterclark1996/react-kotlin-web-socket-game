@@ -1,14 +1,33 @@
 import { useCallback, useEffect, useState } from "react"
+import { useWebSocket } from '../Contexts/WebSocketContext'
+
+const KEY_A = 65
+const KEY_S = 83
+const KEY_D = 68
+const KEY_LEFT = 37
+const KEY_DOWN = 40
+const KEY_RIGHT = 39
+
+const keyIdToEnum = keyId =>{
+    switch(keyId){
+        case KEY_A:
+        case KEY_LEFT:
+            return "LEFT"
+        case KEY_D:
+        case KEY_RIGHT:
+            return "RIGHT"
+        case KEY_S:
+        case KEY_DOWN:
+            return "DOWN"
+        default:
+            return "NONE"
+    }
+}
 
 const Controls = () => {
-    const keyClassName = "d-flex border m-2 Key align-items-center justify-content-center"
+    const { send } = useWebSocket()
 
-    const KEY_A = 65
-    const KEY_S = 83
-    const KEY_D = 68
-    const KEY_LEFT = 37
-    const KEY_DOWN = 40
-    const KEY_RIGHT = 39
+    const keyClassName = "d-flex border m-2 Key align-items-center justify-content-center"
 
     const [selectedKey, setSelectedKey] = useState(0)
 
@@ -28,6 +47,10 @@ const Controls = () => {
             document.removeEventListener("keyup", onKeyUp)
         }
     }, [onKeyDown, onKeyUp])
+
+    useEffect(() => send("InboundUpdatePressedKey", {
+        pressedKey: keyIdToEnum(selectedKey)
+    }), [selectedKey, send])
 
     return(
         <div className="d-flex flex-column h-100 justify-content-center">

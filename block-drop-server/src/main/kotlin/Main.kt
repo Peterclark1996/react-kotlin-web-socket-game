@@ -1,6 +1,7 @@
 import arrow.core.Either
 import arrow.core.flatMap
 import events.Event
+import events.inbound.InboundUpdatePressedKey
 import events.inbound.InboundUserJoinedRoom
 import events.outbound.OutboundRoomUsersUpdated
 import events.outbound.OutboundUserJoinedRoomFailure
@@ -93,5 +94,9 @@ suspend fun processEvent(
                     )
                 )
             }.mapAsUnit()
+        "InboundUpdatePressedKey" ->
+            decodeJsonStringToEventData<InboundUpdatePressedKey>(event.jsonData).map { eventData ->
+                currentConnection.pressedKey = eventData.pressedKey
+            }
         else -> Error("Event type not recognised: ${event.type}").asLeft()
     }
