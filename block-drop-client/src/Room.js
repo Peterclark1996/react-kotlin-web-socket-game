@@ -10,30 +10,42 @@ import Overlay from './Components/Overlay'
 
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
+const gameStartedEventId = generateHtmlId()
 
 const Room = ({ match }) => {
     const { on, send } = useWebSocket()
     const { username, setUsername } = useUsername()
 
+    const [hasGameStarted, setHasGameStarted] = useState(false)
+
     const [usernameInput, setUsernameInput] = useState("")
 
     const onJoinGameClicked = () => {
-        send("InboundUserJoinedRoom", {
+        send("InboundUserTriedToJoinRoom", {
             room: match.params.roomCode,
             username: usernameInput
         })
     }
 
+    const onStartGameClicked = () => {
+        send("InboundUserStartedGame", {})
+    }
+
     useEffect(() => {
         on(
-            "OutboundUserJoinedRoomSuccess", 
+            "OutboundUserTriedToJoinRoomSuccess", 
             eventData => setUsername(eventData.username),
             joinSuccessEventId
         )
         on(
-            "OutboundUserJoinedRoomFailure", 
+            "OutboundUserTriedToJoinRoomFailure", 
             eventData => alert(eventData.message),
             joinFailEventId
+        )
+        on(
+            "OutboundGameStarted",
+            _ => setHasGameStarted(true),
+            gameStartedEventId
         )
     }, [on, setUsername])
 
@@ -54,7 +66,7 @@ const Room = ({ match }) => {
                     </Overlay>
             }
             <div className="SidePanel">
-                <Info />
+                <Info hasGameStarted={hasGameStarted} startGame={onStartGameClicked}/>
             </div>
             <div className="MiddlePanel">
                 <Game />

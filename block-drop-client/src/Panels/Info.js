@@ -4,7 +4,7 @@ import { generateHtmlId } from '../helpers'
 
 const roomUsersUpdatedEventId = generateHtmlId()
 
-const Info = () => {
+const Info = ({ hasGameStarted, startGame }) => {
     const { connectionState, on, send } = useWebSocket()
 
     const [players, setPlayers] = useState([])
@@ -15,7 +15,9 @@ const Info = () => {
         return <span className="text-danger">Disconnected</span>
     }
 
-    useEffect(() => send("InboundRequestRoomUsers", {}), [send])
+    useEffect(() => {
+        send("InboundRequestRoomUsers", {})
+    }, [send])
 
     useEffect(() => {
         on(
@@ -37,6 +39,14 @@ const Info = () => {
                     players.map(username => <span key={username}>{username}</span>)
                 }
             </div>
+            {
+                !hasGameStarted &&
+                <div>
+                    <div className="btn btn-success m-2 text-white px-3 py-2" onClick={startGame}>
+                        <h4 className="mb-0">Start Game</h4>
+                    </div>
+                </div>
+            }
         </div>
     )
 }

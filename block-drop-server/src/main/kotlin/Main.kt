@@ -2,10 +2,10 @@ import arrow.core.Either
 import arrow.core.flatMap
 import events.Event
 import events.inbound.InboundUpdatePressedKey
-import events.inbound.InboundUserJoinedRoom
-import events.outbound.OutboundRoomUsersUpdated
-import events.outbound.OutboundUserJoinedRoomFailure
-import events.outbound.OutboundUserJoinedRoomSuccess
+import events.inbound.InboundUserTriedToJoinRoom
+import events.inbound.InboundUserStartedGame
+import events.inbound.InboundUserTriedToCreateRoom
+import events.outbound.*
 import events.sendEvent
 import events.sendToRoom
 import io.ktor.application.*
@@ -31,22 +31,26 @@ fun Application.module() {
                     frame as? Frame.Text ?: continue
                     val frameText = frame.readText()
                     decodeJsonStringToEvent(frameText).flatMap { event ->
-                        processEvent(event, currentConnection, connections)
+                        processEvent(event, currentConnection, connections, rooms)
                     }.mapLeft { println("ERROR: $it") }
                 }
             } catch (e: Exception) {
                 println("ERROR: $e")
             } finally {
                 connections -= currentConnection
-                val room = currentConnection.room
+                val room = rooms.find { it.roomCode == currentConnection.roomCode }
                 if (room != null) {
                     connections.sendToRoom(
-                        room,
+                        room.roomCode,
                         OutboundRoomUsersUpdated.serializer(),
                         OutboundRoomUsersUpdated(
-                            connections.getAllUsersInRoom(room)
+                            connections.getAllUsersInRoom(room.roomCode)
                         )
                     ).mapLeft { println("ERROR: $it") }
+
+                    if(connections.getAllConnectionsInRoom(room.roomCode).isEmpty()){
+                        rooms -= room
+                    }
                 }
             }
         }
@@ -56,47 +60,69 @@ fun Application.module() {
 suspend fun processEvent(
     event: Event,
     currentConnection: Connection,
-    connections: MutableSet<Connection>
+    connections: MutableSet<Connection>,
+    rooms: MutableSet<Room>
 ): Either<Error, Unit> =
     when (event.type) {
-        "InboundUserJoinedRoom" ->
-            decodeJsonStringToEventData<InboundUserJoinedRoom>(event.jsonData).flatMap { eventData ->
-                if (connections.any { c ->
-                        c.room == eventData.room && c.username
-                            ?.lowercase() == eventData.username.lowercase()
-                    }) {
-                    return currentConnection.sendEvent(
-                        OutboundUserJoinedRoomFailure.serializer(),
-                        OutboundUserJoinedRoomFailure("Name already taken")
-                    )
-                }
-                currentConnection.room = eventData.room
+        "InboundUserTriedToCreateRoom" ->
+            decodeJsonStringToEventData<InboundUserTriedToCreateRoom>(event.jsonData).flatMap { eventData ->
+                val newRoom = Room(rooms.getUnusedRoomCode())
+                rooms += newRoom
+                currentConnection.roomCode = newRoom.roomCode
                 currentConnection.username = eventData.username
-                return currentConnection.sendEvent(
-                    OutboundUserJoinedRoomSuccess.serializer(),
-                    OutboundUserJoinedRoomSuccess(eventData.room, eventData.username)
-                ).flatMap {
-                    connections.sendToRoom(
-                        eventData.room,
-                        OutboundRoomUsersUpdated.serializer(),
-                        OutboundRoomUsersUpdated(
-                            connections.getAllUsersInRoom(eventData.room)
-                        )
+                currentConnection.sendEvent(
+                    OutboundUserTriedToCreateRoomSuccess.serializer(),
+                    OutboundUserTriedToCreateRoomSuccess(newRoom.roomCode, eventData.username)
+                )
+            }
+        "InboundUserTriedToJoinRoom" ->
+            decodeJsonStringToEventData<InboundUserTriedToJoinRoom>(event.jsonData).flatMap { eventData ->
+                if (connections.any { it.roomCode == eventData.room && it.username?.lowercase() == eventData.username.lowercase() }) {
+                    currentConnection.sendEvent(
+                        OutboundUserTriedToJoinRoomFailure.serializer(),
+                        OutboundUserTriedToJoinRoomFailure("Name already taken")
                     )
-                }.map { }
+                } else if (!rooms.any { it.roomCode == eventData.room }) {
+                    currentConnection.sendEvent(
+                        OutboundUserTriedToJoinRoomFailure.serializer(),
+                        OutboundUserTriedToJoinRoomFailure("Room not found")
+                    )
+                } else {
+                    currentConnection.roomCode = eventData.room
+                    currentConnection.username = eventData.username
+                    currentConnection.sendEvent(
+                        OutboundUserTriedToJoinRoomSuccess.serializer(),
+                        OutboundUserTriedToJoinRoomSuccess(eventData.room, eventData.username)
+                    ).flatMap {
+                        connections.sendToRoom(
+                            eventData.room,
+                            OutboundRoomUsersUpdated.serializer(),
+                            OutboundRoomUsersUpdated(
+                                connections.getAllUsersInRoom(eventData.room)
+                            )
+                        )
+                    }.mapToUnit()
+                }
             }
         "InboundRequestRoomUsers" ->
-            currentConnection.room.asEither().map { room ->
+            currentConnection.roomCode.toEither().map { room ->
                 currentConnection.sendEvent(
                     OutboundRoomUsersUpdated.serializer(),
                     OutboundRoomUsersUpdated(
                         connections.getAllUsersInRoom(room)
                     )
                 )
-            }.mapAsUnit()
+            }.mapToUnit()
         "InboundUpdatePressedKey" ->
             decodeJsonStringToEventData<InboundUpdatePressedKey>(event.jsonData).map { eventData ->
                 currentConnection.pressedKey = eventData.pressedKey
             }
-        else -> Error("Event type not recognised: ${event.type}").asLeft()
+        "InboundUserStartedGame" ->
+            decodeJsonStringToEventData<InboundUserStartedGame>(event.jsonData).flatMap { _ ->
+                rooms.find { it.roomCode == currentConnection.roomCode }
+                    .toEither()
+                    .map { it.startGame(connections) }
+                    .mapLeft { Error("Cannot start game") }
+            }
+        else -> Error("Event type not recognised: ${event.type}").toLeft()
     }

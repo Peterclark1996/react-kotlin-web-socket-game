@@ -2,8 +2,8 @@ package events
 
 import Connection
 import arrow.core.Either
-import asLeft
-import asRight
+import toLeft
+import toRight
 import flatten
 import getAllConnectionsInRoom
 import io.ktor.http.cio.websocket.*
@@ -15,7 +15,7 @@ suspend fun <T> Connection.sendEvent(
     eventData: T
 ): Either<Error, Unit> {
     val eventType = eventData!!::class.simpleName
-    if(eventType.isNullOrEmpty()) return Error("Failed to get event name for event type $eventData").asLeft()
+    if(eventType.isNullOrEmpty()) return Error("Failed to get event name for event type $eventData").toLeft()
 
     this.session.send(
         Json.encodeToString(
@@ -29,7 +29,7 @@ suspend fun <T> Connection.sendEvent(
             )
         )
     )
-    return Unit.asRight()
+    return Unit.toRight()
 }
 
 suspend fun <T> Set<Connection>.sendToRoom(

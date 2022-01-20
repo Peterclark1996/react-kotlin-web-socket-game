@@ -1,7 +1,7 @@
 import io.ktor.http.cio.websocket.*
 
 class Connection(val session: DefaultWebSocketSession) {
-    var room: String? = null
+    var roomCode: String? = null
     var username: String? = null
     var pressedKey: KeyTypes = KeyTypes.NONE
 }

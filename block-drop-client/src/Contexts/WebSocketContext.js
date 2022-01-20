@@ -23,6 +23,33 @@ export const WebSocketProvider = props => {
             .forEach(el => el.func(JSON.parse(eventData.jsonData)))
     }, [eventListeners])
 
+    const addListenerToSocket = useCallback((eventType, func, key) => {
+        if(typeof key !== "string") throw new Error(`Key must be provided when adding a socket listener for event type '${eventType}'`)
+        if(eventListeners.filter(el => el.key === key).length > 0) return
+
+        setEventListeners([
+            ...eventListeners,
+            {
+                eventType,
+                func,
+                key
+            }
+        ])
+    }, [eventListeners])
+
+    const sendToSocket = (eventType, eventData) => {
+        if(connectionState === 1){
+            connection.send(
+                JSON.stringify(
+                    {
+                        type: eventType,
+                        jsonData: JSON.stringify(eventData)
+                    }
+                )
+            )
+        }
+    }
+
     const connectToSocket = useCallback((socketUrl, retriesRemaining = maxRetries) => {
         if(hasFailedToConnect) return
 
@@ -83,33 +110,6 @@ export const WebSocketProvider = props => {
 
     const disconnectFromSocket = () => {
         
-    }
-
-    const addListenerToSocket = useCallback((eventType, func, key) => {
-        if(typeof key !== "string") throw new Error(`Key must be provided when adding a socket listener for event type '${eventType}'`)
-        if(eventListeners.filter(el => el.key === key).length > 0) return
-
-        setEventListeners([
-            ...eventListeners,
-            {
-                eventType,
-                func,
-                key
-            }
-        ])
-    }, [eventListeners])
-
-    const sendToSocket = (eventType, eventData) => {
-        if(connectionState === 1){
-            connection.send(
-                JSON.stringify(
-                    {
-                        type: eventType,
-                        jsonData: JSON.stringify(eventData)
-                    }
-                )
-            )
-        }
     }
 
     useEffect(() => connectToSocket(socketUrl), [connectToSocket])

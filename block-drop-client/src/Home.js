@@ -7,6 +7,8 @@ import { generateHtmlId, ROUTE_ROOM } from './helpers'
 
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
+const createSuccessEventId = generateHtmlId()
+const createFailEventId = generateHtmlId()
 
 const Home = () => {
     const { on, send } = useWebSocket()
@@ -17,8 +19,14 @@ const Home = () => {
     const [usernameInput, setUsernameInput] = useState("")
 
     const onJoinGameClicked = () => {
-        send("InboundUserJoinedRoom", {
+        send("InboundUserTriedToJoinRoom", {
             room: roomCodeInput,
+            username: usernameInput
+        })
+    }
+
+    const onCreateGameClicked = () => {
+        send("InboundUserTriedToCreateRoom", {
             username: usernameInput
         })
     }
@@ -33,9 +41,22 @@ const Home = () => {
             joinSuccessEventId
         )
         on(
-            "OutboundUserJoinedRoomFailure", 
+            "OutboundUserTriedToCreateRoomFailure", 
             eventData => alert(eventData.message),
             joinFailEventId
+        )
+        on(
+            "OutboundUserTriedToCreateRoomSuccess", 
+            eventData => {
+                setUsername(eventData.username)
+                history.push(`${ROUTE_ROOM}/${eventData.room}`)
+            },
+            createSuccessEventId
+        )
+        on(
+            "OutboundUserJoinedRoomFailure", 
+            eventData => alert(eventData.message),
+            createFailEventId
         )
     }, [history, on, setUsername])
 
@@ -55,7 +76,7 @@ const Home = () => {
                         <div className="ms-2 btn border" onClick={onJoinGameClicked}>Join Game</div>
                     </div>
                     <div className="border my-2 w-100" />
-                    <div className="btn border" disabled>Create New Game</div>
+                    <div className="btn border" onClick={onCreateGameClicked}>Create New Game</div>
                 </div>
             </Overlay>
         </div>
