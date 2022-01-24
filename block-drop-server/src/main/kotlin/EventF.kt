@@ -1,14 +1,10 @@
-package events
-
-import Connection
+import state.Connection
 import arrow.core.Either
-import toLeft
-import toRight
-import flatten
-import getAllConnectionsInRoom
+import events.Event
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import state.ServerState
 
 suspend fun <T> Connection.sendEvent(
     serializer: KSerializer<T>,
@@ -32,7 +28,7 @@ suspend fun <T> Connection.sendEvent(
     return Unit.toRight()
 }
 
-suspend fun <T> Set<Connection>.sendToRoom(
+suspend fun <T> ServerState.sendToRoom(
     room: String,
     serializer: KSerializer<T>,
     eventData: T

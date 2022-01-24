@@ -64,7 +64,7 @@ const Home = () => {
         <div className="App d-flex justify-content-center align-items-center bg-dark">
             <Overlay>
                 <div className="d-flex flex-column p-3 align-items-center">
-                    <span className="mb-2">Block Drop or wtv game</span>
+                    <span className="mb-2">Block Drop</span>
                     <div className="d-flex mb-2">
                         <span className="me-2">Your name:</span>
                         <input value={usernameInput} onChange={event => setUsernameInput(event.target.value)}/>
