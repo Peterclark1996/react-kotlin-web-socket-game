@@ -16,8 +16,8 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module() {
     install(WebSockets)
     routing {
-
         val serverState = ServerState()
+        println("Server started")
 
         webSocket("/room") {
             val currentConnection = Connection(this)

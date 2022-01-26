@@ -1,3 +1,4 @@
+import arrow.core.flatMap
 import events.outbound.OutboundGameStarted
 import state.ServerState
 import java.util.*
@@ -10,10 +11,6 @@ fun ServerState.getAllUsersInRoom(room: String) =
 fun ServerState.getAllConnectionsInRoom(room: String) =
     this.getConnections().filter { c -> c.roomCode == room }
 
-suspend fun ServerState.startGame(roomCode: String) {
-    this.sendToRoom(roomCode, OutboundGameStarted.serializer(), OutboundGameStarted())
-}
-
 fun ServerState.getUnusedRoomCode(): String {
     var randomString = UUID.randomUUID().toString().substring(0, 5)
     while (this.getRooms().find { it.roomCode == randomString } != null) {
@@ -21,3 +18,9 @@ fun ServerState.getUnusedRoomCode(): String {
     }
     return randomString
 }
+
+suspend fun ServerState.startGame(roomCode: String) =
+    this.getRooms().find { it.roomCode == roomCode }.toEither().flatMap {
+        it.start(this)
+        this.sendToRoom(roomCode, OutboundGameStarted.serializer(), OutboundGameStarted())
+    }.mapToUnit()

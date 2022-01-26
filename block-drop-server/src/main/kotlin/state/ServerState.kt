@@ -17,6 +17,7 @@ class ServerState {
         rooms += room
     }
     fun removeRoom(room: Room){
+        room.stop()
         rooms -= room
     }
 }
