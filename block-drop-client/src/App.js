@@ -1,25 +1,41 @@
 import './App.css'
-import Room from './Room'
-import Home from './Home'
+import Room from './Pages/Room'
+import Home from './Pages/Home'
 import * as WebSocketContext from './Contexts/WebSocketContext'
-import * as UsernameContext from './Contexts/UsernameContext'
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom"
 import { ROUTE_HOME, ROUTE_ROOM } from './helpers'
+import Reducer from './Reducer/Reducer'
+import { useReducer } from 'react'
 
 const App = () => {
+    const [state, dispatch] = useReducer(
+        Reducer,
+        {
+            username: ""
+        }
+    )
+
     return (
         <WebSocketContext.WebSocketProvider>
-            <UsernameContext.UsernameProvider>
-                <BrowserRouter>
-                    <Switch>
-                        <Route exact strict path={ROUTE_HOME} component={Home} />
-                        <Route exact strict path={`${ROUTE_ROOM}/:roomCode`} component={Room} />
-                        <Route>
-                            <Redirect to={ROUTE_HOME} />
-                        </Route>
-                    </Switch>
-                </BrowserRouter>
-            </UsernameContext.UsernameProvider>
+            <BrowserRouter>
+                <Switch>
+                    <Route 
+                        exact 
+                        strict 
+                        path={ROUTE_HOME} 
+                        children={<Home state={state} dispatch={dispatch} />} 
+                    />
+                    <Route 
+                        exact 
+                        strict 
+                        path={`${ROUTE_ROOM}/:roomCode`} 
+                        children={<Room state={state} dispatch={dispatch} />} 
+                    />
+                    <Route>
+                        <Redirect to={ROUTE_HOME} />
+                    </Route>
+                </Switch>
+            </BrowserRouter>
         </WebSocketContext.WebSocketProvider>
     )
 }

@@ -1,18 +1,17 @@
 import { useHistory } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import Overlay from './Components/Overlay'
-import { useWebSocket } from './Contexts/WebSocketContext'
-import { useUsername } from './Contexts/UsernameContext'
-import { generateHtmlId, ROUTE_ROOM } from './helpers'
+import Overlay from '../Components/Overlay'
+import { useWebSocket } from '../Contexts/WebSocketContext'
+import { generateHtmlId, ROUTE_ROOM } from '../helpers'
+import ActionTypes from '../Reducer/ActionTypes'
 
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
 const createSuccessEventId = generateHtmlId()
 const createFailEventId = generateHtmlId()
 
-const Home = () => {
+const Home = ({ dispatch }) => {
     const { on, send } = useWebSocket()
-    const { setUsername } = useUsername()
     const history = useHistory()
 
     const [roomCodeInput, setRoomCodeInput] = useState("")
@@ -35,7 +34,7 @@ const Home = () => {
         on(
             "OutboundUserJoinedRoomSuccess", 
             eventData => {
-                setUsername(eventData.username)
+                dispatch({ type: ActionTypes.USERNAME_UPDATED, updatedUsername: eventData.username })
                 history.push(`${ROUTE_ROOM}/${eventData.room}`)
             },
             joinSuccessEventId
@@ -48,7 +47,7 @@ const Home = () => {
         on(
             "OutboundUserTriedToCreateRoomSuccess", 
             eventData => {
-                setUsername(eventData.username)
+                dispatch({ type: ActionTypes.USERNAME_UPDATED, updatedUsername: eventData.username })
                 history.push(`${ROUTE_ROOM}/${eventData.room}`)
             },
             createSuccessEventId
@@ -58,7 +57,7 @@ const Home = () => {
             eventData => alert(eventData.message),
             createFailEventId
         )
-    }, [history, on, setUsername])
+    }, [dispatch, history, on])
 
     return(
         <div className="App d-flex justify-content-center align-items-center bg-dark">

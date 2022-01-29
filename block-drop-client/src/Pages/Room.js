@@ -1,20 +1,21 @@
-import Game from './Panels/Game'
-import Controls from './Panels/Controls'
-import Info from './Panels/Info'
+import Game from '../Panels/Game'
+import Controls from '../Panels/Controls'
+import Info from '../Panels/Info'
 import { useState } from 'react'
-import { useWebSocket } from './Contexts/WebSocketContext'
-import { useUsername } from './Contexts/UsernameContext'
+import { useWebSocket } from '../Contexts/WebSocketContext'
 import { useEffect } from 'react'
-import { generateHtmlId } from './helpers'
-import Overlay from './Components/Overlay'
+import { generateHtmlId } from '../helpers'
+import Overlay from '../Components/Overlay'
+import ActionTypes from '../Reducer/ActionTypes'
+import { useParams } from 'react-router-dom'
 
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
 const gameStartedEventId = generateHtmlId()
 
-const Room = ({ match }) => {
+const Room = ({ state, dispatch }) => {
     const { on, send } = useWebSocket()
-    const { username, setUsername } = useUsername()
+    const { roomCode } = useParams()
 
     const [hasGameStarted, setHasGameStarted] = useState(false)
 
@@ -22,7 +23,7 @@ const Room = ({ match }) => {
 
     const onJoinGameClicked = () => {
         send("InboundUserTriedToJoinRoom", {
-            room: match.params.roomCode,
+            room: roomCode,
             username: usernameInput
         })
     }
@@ -34,7 +35,7 @@ const Room = ({ match }) => {
     useEffect(() => {
         on(
             "OutboundUserTriedToJoinRoomSuccess", 
-            eventData => setUsername(eventData.username),
+            eventData => dispatch({ type: ActionTypes.USERNAME_UPDATED, updatedUsername: eventData.username }),
             joinSuccessEventId
         )
         on(
@@ -47,15 +48,15 @@ const Room = ({ match }) => {
             _ => setHasGameStarted(true),
             gameStartedEventId
         )
-    }, [on, setUsername])
+    }, [dispatch, on])
 
     return (
         <div className="App d-flex justify-content-center align-items-center bg-dark">
             {
-                username === "" && 
+                state.username === "" && 
                     <Overlay>
                         <div className="d-flex flex-column p-3 align-items-center">
-                            <span className="mb-2">Joining game '{match.params.roomCode}'</span>
+                            <span className="mb-2">Joining game '{roomCode}'</span>
                             <div className="border my-2 w-100" />
                             <div className="d-flex justify-content-end ms-auto mb-2">
                                 <span className="me-2">Your name:</span>
