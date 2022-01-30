@@ -23,7 +23,7 @@ const App = () => {
                         exact 
                         strict 
                         path={ROUTE_HOME} 
-                        children={<Home state={state} dispatch={dispatch} />} 
+                        children={<Home dispatch={dispatch} />} 
                     />
                     <Route 
                         exact 

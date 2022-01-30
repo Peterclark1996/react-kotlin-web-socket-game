@@ -19,6 +19,7 @@ export const WebSocketProvider = props => {
 
     const onEventReceived = useCallback(event => {
         const eventData = JSON.parse(event.data)
+        console.log(eventData)
         eventListeners
             .filter(el => el.eventType === eventData.type)
             .forEach(el => el.func(JSON.parse(eventData.jsonData)))
@@ -49,6 +50,10 @@ export const WebSocketProvider = props => {
                 )
             )
         }
+    }
+
+    const disconnectFromSocket = () => {
+        
     }
 
     const connectToSocket = useCallback((socketUrl, retriesRemaining = maxRetries) => {
@@ -109,10 +114,6 @@ export const WebSocketProvider = props => {
             newConnection.close()
         }
     }, [connection, connectionState, hasFailedToConnect, onEventReceived])
-
-    const disconnectFromSocket = () => {
-        
-    }
 
     useEffect(() => connectToSocket(socketUrl), [connectToSocket])
 

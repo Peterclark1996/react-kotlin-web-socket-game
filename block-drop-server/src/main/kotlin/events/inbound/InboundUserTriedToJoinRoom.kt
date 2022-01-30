@@ -17,7 +17,12 @@ import state.ServerState
 @Serializable
 data class InboundUserTriedToJoinRoom(val room: String, val username: String): Receivable {
     override suspend fun onReceive(currentConnection: Connection, serverState: ServerState): Either<Error, Unit> =
-        if (serverState.getConnections().any { it.roomCode == this.room && it.username?.lowercase() == this.username.lowercase() }) {
+        if (this.username == "") {
+            currentConnection.sendEvent(
+                OutboundUserTriedToJoinRoomFailure.serializer(),
+                OutboundUserTriedToJoinRoomFailure("Invalid username")
+            )
+        } else if (serverState.getConnections().any { it.roomCode == this.room && it.username?.lowercase() == this.username.lowercase() }) {
             currentConnection.sendEvent(
                 OutboundUserTriedToJoinRoomFailure.serializer(),
                 OutboundUserTriedToJoinRoomFailure("Name already taken")
@@ -25,7 +30,7 @@ data class InboundUserTriedToJoinRoom(val room: String, val username: String): R
         } else if (!serverState.getRooms().any { it.roomCode == this.room }) {
             currentConnection.sendEvent(
                 OutboundUserTriedToJoinRoomFailure.serializer(),
-                OutboundUserTriedToJoinRoomFailure("state.Room not found")
+                OutboundUserTriedToJoinRoomFailure("Room not found")
             )
         } else {
             currentConnection.roomCode = this.room
