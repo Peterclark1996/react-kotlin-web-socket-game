@@ -18,7 +18,7 @@ class Room(val roomCode: String) {
             while (running) {
                 delay(1000)
 
-                val tilesState = currentGameState?.tiles
+                val tilesState = currentGameState?.getTilesWithBlocks()
                 if (tilesState == null) {
                     running = false
                 } else {
@@ -27,6 +27,8 @@ class Room(val roomCode: String) {
                         OutboundGameStateUpdated.serializer(),
                         OutboundGameStateUpdated(tick, tilesState)
                     )
+
+                    currentGameState = currentGameState?.processToNextState()
                     tick++
                 }
             }
