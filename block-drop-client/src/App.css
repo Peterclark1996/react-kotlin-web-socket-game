@@ -29,9 +29,9 @@
   box-shadow: 0 0 10px #000000;
 }
 
-.MiddlePanel {
-  width: 60%;
-  max-width: 60%;
+.MainPanel {
+  width: 80%;
+  max-width: 80%;
 }
 
 .OverlayBackground {

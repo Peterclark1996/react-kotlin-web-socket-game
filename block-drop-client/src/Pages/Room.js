@@ -1,6 +1,4 @@
 import Game from '../Panels/Game'
-import Controls from '../Panels/Controls'
-import Info from '../Panels/Info'
 import { useState } from 'react'
 import { useWebSocket } from '../Contexts/WebSocketContext'
 import { useEffect } from 'react'
@@ -10,6 +8,7 @@ import ActionTypes from '../Reducer/ActionTypes'
 import { useHistory, useParams } from 'react-router-dom'
 import ConnectionStatus from '../Components/ConnectionStatus'
 import LineBreak from '../Components/LineBreak'
+import LeftPanel from '../Panels/LeftPanel'
 
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
@@ -33,10 +32,6 @@ const Room = ({ state, dispatch }) => {
             room: roomCode,
             username: usernameInput
         })
-    }
-
-    const onStartGameClicked = () => {
-        send("InboundUserStartedGame", {})
     }
 
     useEffect(() => {
@@ -80,13 +75,10 @@ const Room = ({ state, dispatch }) => {
                     </Overlay> :
                     <div className="d-flex w-100">
                         <div className="SidePanel">
-                            <Info hasGameStarted={hasGameStarted} startGame={onStartGameClicked}/>
+                            <LeftPanel hasGameStarted={hasGameStarted} />
                         </div>
-                        <div className="MiddlePanel">
+                        <div className="MainPanel">
                             <Game />
-                        </div>
-                        <div className="SidePanel">
-                            <Controls />
                         </div>
                     </div>
             }

@@ -53,7 +53,7 @@ const Controls = () => {
     }), [selectedKey, send])
 
     return(
-        <div className="d-flex flex-column h-100 justify-content-center">
+        <div className="d-flex flex-column justify-content-center">
             <div className="d-flex justify-content-center">
                 <div className={`${keyClassName} ${selectedKey === KEY_A ? "Pressed" : ""}`}>
                     A
