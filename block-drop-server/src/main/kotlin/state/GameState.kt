@@ -1,7 +1,7 @@
 package state
 
 class GameState private constructor(
-    private val tiles: Tiles,
+    private val mapTiles: Tiles,
     private val players: Map<Int, Connection>,
     private val blocks: Map<Int, Block?>
 ) {
@@ -26,11 +26,11 @@ class GameState private constructor(
     }
 
     fun getTilesWithBlocks(): Tiles {
-        val updatedTiles = Array(tiles.size) {
-            IntArray(tiles.first().size) { 0 }
+        val updatedTiles = Array(mapTiles.size) {
+            IntArray(mapTiles.first().size) { 0 }
         }
 
-        tiles.forEachIndexed { rowIndex, row ->
+        mapTiles.forEachIndexed { rowIndex, row ->
             row.forEachIndexed { tileIndex, tile ->
                 updatedTiles[rowIndex][tileIndex] = tile
             }
@@ -51,20 +51,38 @@ class GameState private constructor(
         val updatedBlocks = blocks.mapValues { pair ->
             val block = pair.value
             if (block != null) {
-                if (block.canMoveDown(tiles)) {
-                    Block(block.x, block.y + 1, block.tiles)
+                val playerMovedBlock = block.handlePlayerMovement(pair.key)
+
+                if (playerMovedBlock.canMoveDown(mapTiles)) {
+                    Block(playerMovedBlock.x, playerMovedBlock.y + 1, playerMovedBlock.tiles)
                 } else {
-                    block.tiles.forEachIndexed { rowIndex, row ->
-                        row.forEachIndexed { tileIndex, tile ->
-                            if(tile != 0){
-                                tiles[rowIndex + block.y][tileIndex + block.x] = tile
-                            }
-                        }
-                    }
+                    playerMovedBlock.stampOntoTiles()
                     null
                 }
             } else Block(0, 0, Block.getRandomTilesForPlayerId(pair.key))
         }
-        return GameState(tiles, players, updatedBlocks)
+        return GameState(mapTiles, players, updatedBlocks)
     }
+
+    private fun Block.handlePlayerMovement(playerId: Int): Block {
+        val connection = players[playerId] ?: throw Error("Missing connection for id $playerId")
+        return when {
+            connection.pressedKey == KeyTypes.DOWN && this.canMoveDown(mapTiles) ->
+                Block(this.x, this.y + 1, this.tiles)
+            connection.pressedKey == KeyTypes.LEFT && this.canMoveLeft(mapTiles) ->
+                Block(this.x - 1, this.y, this.tiles)
+            connection.pressedKey == KeyTypes.RIGHT && this.canMoveRight(mapTiles) ->
+                Block(this.x + 1, this.y, this.tiles)
+            else -> this
+        }
+    }
+
+    private fun Block.stampOntoTiles() =
+        this.tiles.forEachIndexed { rowIndex, row ->
+            row.forEachIndexed { tileIndex, tile ->
+                if (tile != 0) {
+                    mapTiles[rowIndex + this.y][tileIndex + this.x] = tile
+                }
+            }
+        }
 }

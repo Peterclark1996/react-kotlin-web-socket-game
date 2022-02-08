@@ -56,6 +56,34 @@ data class Block(val x: Int, val y: Int, val tiles: Tiles) {
         return true
     }
 
+    fun canMoveLeft(mapTiles: Tiles): Boolean {
+        tiles.forEachIndexed { rowIndex, row ->
+            if(x <= 0){
+                return false
+            }
+            row.forEachIndexed { tileIndex, tile ->
+                if(tile != 0 && mapTiles[y + rowIndex][x + tileIndex - 1] != 0){
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    fun canMoveRight(mapTiles: Tiles): Boolean {
+        tiles.forEachIndexed { rowIndex, row ->
+            if(x + row.size > mapTiles.first().size){
+                return false
+            }
+            row.forEachIndexed { tileIndex, tile ->
+                if(tile != 0 && mapTiles[y + rowIndex][x + tileIndex + 1] != 0){
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
