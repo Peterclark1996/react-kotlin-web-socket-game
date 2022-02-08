@@ -2,12 +2,16 @@ package state
 
 import events.outbound.OutboundGameStateUpdated
 import getAllConnectionsInRoom
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import sendToRoom
+
+const val DELAY_BETWEEN_TICKS: Long = 200
 
 class Room(val roomCode: String) {
     private var running = false
-    private var tick = 0
     private var currentGameState: GameState? = null
 
     fun start(serverState: ServerState) {
@@ -16,20 +20,21 @@ class Room(val roomCode: String) {
         running = true
         CoroutineScope(Job()).launch {
             while (running) {
-                delay(1000)
+                delay(DELAY_BETWEEN_TICKS)
 
-                val tilesState = currentGameState?.getTilesWithBlocks()
-                if (tilesState == null) {
+                currentGameState = currentGameState?.getNextState()
+                val nullSafeCurrentGameState = currentGameState
+                if (nullSafeCurrentGameState == null) {
                     running = false
                 } else {
                     serverState.sendToRoom(
                         roomCode,
                         OutboundGameStateUpdated.serializer(),
-                        OutboundGameStateUpdated(tick, tilesState)
+                        OutboundGameStateUpdated(
+                            nullSafeCurrentGameState.getTick(),
+                            nullSafeCurrentGameState.getTilesWithBlocks()
+                        )
                     )
-
-                    currentGameState = currentGameState?.processToNextState()
-                    tick++
                 }
             }
         }

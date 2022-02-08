@@ -3,7 +3,8 @@ package state
 class GameState private constructor(
     private val mapTiles: Tiles,
     private val players: Map<Int, Connection>,
-    private val blocks: Map<Int, Block?>
+    private val blocks: Map<Int, Block?>,
+    private var tick: Int
 ) {
     companion object {
         fun createNew(players: List<Connection>): GameState {
@@ -21,9 +22,11 @@ class GameState private constructor(
                 it.key to null
             }.toMap()
 
-            return GameState(blankTiles, playersByIds, blocks)
+            return GameState(blankTiles, playersByIds, blocks, 0)
         }
     }
+
+    fun getTick() = tick
 
     fun getTilesWithBlocks(): Tiles {
         val updatedTiles = Array(mapTiles.size) {
@@ -40,28 +43,40 @@ class GameState private constructor(
             val block = pair.value ?: continue
             block.tiles.forEachIndexed { rowIndex, row ->
                 row.forEachIndexed { tileIndex, tile ->
-                    updatedTiles[rowIndex + block.y][tileIndex + block.x] = tile
+                    if(tile != 0){
+                        updatedTiles[rowIndex + block.y][tileIndex + block.x] = tile
+                    }
                 }
             }
         }
         return updatedTiles
     }
 
-    fun processToNextState(): GameState {
+    fun getNextState(): GameState {
         val updatedBlocks = blocks.mapValues { pair ->
             val block = pair.value
-            if (block != null) {
-                val playerMovedBlock = block.handlePlayerMovement(pair.key)
-
-                if (playerMovedBlock.canMoveDown(mapTiles)) {
-                    Block(playerMovedBlock.x, playerMovedBlock.y + 1, playerMovedBlock.tiles)
-                } else {
-                    playerMovedBlock.stampOntoTiles()
-                    null
-                }
-            } else Block(0, 0, Block.getRandomTilesForPlayerId(pair.key))
+            block.getNextState(pair.key)
         }
-        return GameState(mapTiles, players, updatedBlocks)
+        return GameState(mapTiles, players, updatedBlocks, tick + 1)
+    }
+
+    private fun Block?.getNextState(playerId: Int): Block? {
+        if (this == null){
+            return Block(0, 0, Block.getRandomTilesForPlayerId(playerId))
+        }
+
+        val playerMovedBlock = this.handlePlayerMovement(playerId)
+
+        if (tick % 5 != 0){
+            return playerMovedBlock
+        }
+
+        if (playerMovedBlock.canMoveDown(mapTiles)) {
+            return Block(playerMovedBlock.x, playerMovedBlock.y + 1, playerMovedBlock.tiles)
+        }
+
+        playerMovedBlock.stampOntoTiles()
+        return null
     }
 
     private fun Block.handlePlayerMovement(playerId: Int): Block {
