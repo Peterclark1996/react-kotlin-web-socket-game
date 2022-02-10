@@ -1,26 +1,41 @@
 package state
 
-data class Block(val x: Int, val y: Int, val tiles: Tiles) {
+import state.BlockShape.Companion.createShapeFive
+import state.BlockShape.Companion.createShapeFour
+import state.BlockShape.Companion.createShapeOne
+import state.BlockShape.Companion.createShapeSeven
+import state.BlockShape.Companion.createShapeSix
+import state.BlockShape.Companion.createShapeThree
+import state.BlockShape.Companion.createShapeTwo
+
+data class Block(val x: Int, val y: Int, val shape: BlockShape) {
     companion object {
-        fun getRandomTilesForPlayerId(player: Int): Tiles {
-            val possibleBlocks = listOf(shapeOne, shapeTwo, shapeThree, shapeFour, shapeFive, shapeSix, shapeSeven)
-            val selectedBlock = possibleBlocks.random()
-            return selectedBlock.map { row ->
-                row.map {
-                    if (it) player
-                    else 0
-                }.toIntArray()
-            }.toTypedArray()
+        fun getRandomBlock(player: Int): Block {
+            val possibleShapes = listOf(
+                ::createShapeOne,
+                ::createShapeTwo,
+                ::createShapeThree,
+                ::createShapeFour,
+                ::createShapeFive,
+                ::createShapeSix,
+                ::createShapeSeven
+            )
+            val selectedShape = possibleShapes.random().invoke()
+            return Block(0, 0, selectedShape)
         }
     }
 
+    fun rotateClockwise() = Block(x, y, shape.rotateClockwise())
+
+    fun rotateAntiClockwise() = Block(x, y, shape.rotateAntiClockwise())
+
     fun canMoveDown(mapTiles: Tiles): Boolean {
-        tiles.forEachIndexed { rowIndex, row ->
+        shape.getSilhouette().forEachIndexed { rowIndex, row ->
             if(y + rowIndex >= mapTiles.size - 1){
                 return false
             }
             row.forEachIndexed { tileIndex, tile ->
-                if(tile != 0 && mapTiles[y + rowIndex + 1][x + tileIndex] != 0){
+                if(tile && mapTiles[y + rowIndex + 1][x + tileIndex] != 0){
                     return false
                 }
             }
@@ -29,12 +44,12 @@ data class Block(val x: Int, val y: Int, val tiles: Tiles) {
     }
 
     fun canMoveLeft(mapTiles: Tiles): Boolean {
-        tiles.forEachIndexed { rowIndex, row ->
+        shape.getSilhouette().forEachIndexed { rowIndex, row ->
             if(x <= 0){
                 return false
             }
             row.forEachIndexed { tileIndex, tile ->
-                if(tile != 0 && mapTiles[y + rowIndex][x + tileIndex - 1] != 0){
+                if(tile && mapTiles[y + rowIndex][x + tileIndex - 1] != 0){
                     return false
                 }
             }
@@ -43,36 +58,16 @@ data class Block(val x: Int, val y: Int, val tiles: Tiles) {
     }
 
     fun canMoveRight(mapTiles: Tiles): Boolean {
-        tiles.forEachIndexed { rowIndex, row ->
+        shape.getSilhouette().forEachIndexed { rowIndex, row ->
             if(x + row.size >= mapTiles.first().size){
                 return false
             }
             row.forEachIndexed { tileIndex, tile ->
-                if(tile != 0 && mapTiles[y + rowIndex][x + tileIndex + 1] != 0){
+                if(tile && mapTiles[y + rowIndex][x + tileIndex + 1] != 0){
                     return false
                 }
             }
         }
         return true
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Block
-
-        if (x != other.x) return false
-        if (y != other.y) return false
-        if (!tiles.contentDeepEquals(other.tiles)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = x
-        result = 31 * result + y
-        result = 31 * result + tiles.contentDeepHashCode()
-        return result
     }
 }

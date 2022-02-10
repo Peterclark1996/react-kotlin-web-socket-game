@@ -7,37 +7,48 @@ const KEY_D = 68
 const KEY_LEFT = 37
 const KEY_DOWN = 40
 const KEY_RIGHT = 39
-
-const keyIdToEnum = keyId =>{
-    switch(keyId){
-        case KEY_A:
-        case KEY_LEFT:
-            return "LEFT"
-        case KEY_D:
-        case KEY_RIGHT:
-            return "RIGHT"
-        case KEY_S:
-        case KEY_DOWN:
-            return "DOWN"
-        default:
-            return "NONE"
-    }
-}
+const KEY_Q = 81
+const KEY_E = 69
 
 const Controls = () => {
     const { send } = useWebSocket()
 
     const keyClassName = "d-flex border m-2 Key align-items-center justify-content-center"
 
-    const [selectedKey, setSelectedKey] = useState(0)
+    const [pressingLeft, setPressingLeft] = useState(false)
+    const [pressingRight, setPressingRight] = useState(false)
+    const [pressingDown, setPressingDown] = useState(false)
+    const [pressingRotateLeft, setPressingRotateLeft] = useState(false)
+    const [pressingRotateRight, setPressingRotateRight] = useState(false)
 
-    const onKeyDown = useCallback(event => setSelectedKey(event.keyCode), [])
-
-    const onKeyUp = useCallback(event => {
-        if(selectedKey === event.keyCode){
-            setSelectedKey(0)
+    const updateKeyPressState = (keyCode, state) => {
+        switch(keyCode){
+            case KEY_A:
+            case KEY_LEFT:
+                setPressingLeft(state)
+                break
+            case KEY_D:
+            case KEY_RIGHT:
+                setPressingRight(state)
+                break
+            case KEY_S:
+            case KEY_DOWN:
+                setPressingDown(state)
+                break
+            case KEY_Q:
+                setPressingRotateLeft(state)
+                break
+            case KEY_E:
+                setPressingRotateRight(state)
+                break
+            default:
+                break
         }
-    }, [selectedKey])
+    }
+
+    const onKeyDown = useCallback(event => updateKeyPressState(event.keyCode, true), [])
+
+    const onKeyUp = useCallback(event => updateKeyPressState(event.keyCode, false), [])
 
     useEffect(() => {
         document.addEventListener("keydown", onKeyDown)
@@ -49,31 +60,32 @@ const Controls = () => {
     }, [onKeyDown, onKeyUp])
 
     useEffect(() => send("InboundUpdatePressedKey", {
-        pressedKey: keyIdToEnum(selectedKey)
-    }), [selectedKey, send])
+        pressingLeft,
+        pressingRight,
+        pressingDown,
+        pressingRotateRight,
+        pressingRotateLeft
+    }), [pressingDown, pressingLeft, pressingRight, pressingRotateLeft, pressingRotateRight, send])
 
     return(
         <div className="d-flex flex-column justify-content-center">
             <div className="d-flex justify-content-center">
-                <div className={`${keyClassName} ${selectedKey === KEY_A ? "Pressed" : ""}`}>
-                    A
+                <div className={`${keyClassName} ${pressingRotateLeft ? "Pressed" : ""}`}>
+                    Q/⟲
                 </div>
-                <div className={`${keyClassName} ${selectedKey === KEY_S ? "Pressed" : ""}`}>
-                    S
-                </div>
-                <div className={`${keyClassName} ${selectedKey === KEY_D ? "Pressed" : ""}`}>
-                    D
+                <div className={`${keyClassName} ${pressingRotateRight ? "Pressed" : ""}`}>
+                    E/⟳
                 </div>
             </div>
             <div className="d-flex justify-content-center">
-                <div className={`${keyClassName} ${selectedKey === KEY_LEFT ? "Pressed" : ""}`}>
-                    🡨
+                <div className={`${keyClassName} ${pressingLeft ? "Pressed" : ""}`}>
+                    A/🡨
                 </div>
-                <div className={`${keyClassName} ${selectedKey === KEY_DOWN ? "Pressed" : ""}`}>
-                    🡫
+                <div className={`${keyClassName} ${pressingDown ? "Pressed" : ""}`}>
+                    S/🡫
                 </div>
-                <div className={`${keyClassName} ${selectedKey === KEY_RIGHT ? "Pressed" : ""}`}>
-                    🡪
+                <div className={`${keyClassName} ${pressingRight ? "Pressed" : ""}`}>
+                    D/🡪
                 </div>
             </div>
         </div>

@@ -19,7 +19,6 @@ export const WebSocketProvider = props => {
 
     const onEventReceived = useCallback(event => {
         const eventData = JSON.parse(event.data)
-        console.log(eventData)
         eventListeners
             .filter(el => el.eventType === eventData.type)
             .forEach(el => el.func(JSON.parse(eventData.jsonData)))
@@ -40,16 +39,16 @@ export const WebSocketProvider = props => {
     }, [eventListeners])
 
     const sendToSocket = (eventType, eventData) => {
-        if(connectionState === 1){
-            connection.send(
-                JSON.stringify(
-                    {
-                        type: eventType,
-                        jsonData: JSON.stringify(eventData)
-                    }
-                )
+        if(connectionState !== 1) return
+        
+        connection.send(
+            JSON.stringify(
+                {
+                    type: eventType,
+                    jsonData: JSON.stringify(eventData)
+                }
             )
-        }
+        )
     }
 
     const disconnectFromSocket = () => {

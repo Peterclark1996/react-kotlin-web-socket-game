@@ -11,7 +11,7 @@ class GameState private constructor(
             val gridHeight = 10
             val gridWidth = 10
             val blankTiles = Array(gridHeight) {
-                IntArray(gridWidth) { 0 }
+                Array(gridWidth) { 0 }
             }
 
             val playersByIds = players.mapIndexed { i, player ->
@@ -30,7 +30,7 @@ class GameState private constructor(
 
     fun getTilesWithBlocks(): Tiles {
         val updatedTiles = Array(mapTiles.size) {
-            IntArray(mapTiles.first().size) { 0 }
+            Array(mapTiles.first().size) { 0 }
         }
 
         mapTiles.forEachIndexed { rowIndex, row ->
@@ -41,9 +41,9 @@ class GameState private constructor(
 
         for (pair in blocks) {
             val block = pair.value ?: continue
-            block.tiles.forEachIndexed { rowIndex, row ->
+            block.shape.getTiles(pair.key).forEachIndexed { rowIndex, row ->
                 row.forEachIndexed { tileIndex, tile ->
-                    if(tile != 0){
+                    if (tile != 0) {
                         updatedTiles[rowIndex + block.y][tileIndex + block.x] = tile
                     }
                 }
@@ -61,39 +61,45 @@ class GameState private constructor(
     }
 
     private fun Block?.getNextState(playerId: Int): Block? {
-        if (this == null){
-            return Block(0, 0, Block.getRandomTilesForPlayerId(playerId))
+        if (this == null) {
+            return Block.getRandomBlock(playerId)
         }
 
-        val playerMovedBlock = this.handlePlayerMovement(playerId)
-
-        if (tick % 5 != 0){
-            return playerMovedBlock
-        }
-
-        if (playerMovedBlock.canMoveDown(mapTiles)) {
-            return Block(playerMovedBlock.x, playerMovedBlock.y + 1, playerMovedBlock.tiles)
-        }
-
-        playerMovedBlock.stampOntoTiles()
-        return null
+        val connection = players[playerId] ?: throw Error("Missing connection for id $playerId")
+        val blockAfterHorizontalMovement = this.handleHorizontalMovement(connection)
+        val blockAfterRotationalMovement = blockAfterHorizontalMovement.handleRotationalMovement(connection)
+        return blockAfterRotationalMovement.handleVerticalMovement(connection, tick, playerId)
     }
 
-    private fun Block.handlePlayerMovement(playerId: Int): Block {
-        val connection = players[playerId] ?: throw Error("Missing connection for id $playerId")
-        return when {
-            connection.pressedKey == KeyTypes.DOWN && this.canMoveDown(mapTiles) ->
-                Block(this.x, this.y + 1, this.tiles)
-            connection.pressedKey == KeyTypes.LEFT && this.canMoveLeft(mapTiles) ->
-                Block(this.x - 1, this.y, this.tiles)
-            connection.pressedKey == KeyTypes.RIGHT && this.canMoveRight(mapTiles) ->
-                Block(this.x + 1, this.y, this.tiles)
+    private fun Block.handleHorizontalMovement(connection: Connection): Block =
+        when {
+            connection.pressingLeft && this.canMoveLeft(mapTiles) ->
+                Block(this.x - 1, this.y, this.shape)
+            connection.pressingRight && this.canMoveRight(mapTiles) ->
+                Block(this.x + 1, this.y, this.shape)
             else -> this
         }
-    }
 
-    private fun Block.stampOntoTiles() =
-        this.tiles.forEachIndexed { rowIndex, row ->
+    private fun Block.handleRotationalMovement(connection: Connection): Block =
+        when {
+            connection.pressingRotateLeft -> this.rotateAntiClockwise()
+            connection.pressingRotateRight -> this.rotateClockwise()
+            else -> this
+        }
+
+    private fun Block.handleVerticalMovement(connection: Connection, tick: Int, player: Int): Block? =
+        when {
+            (connection.pressingDown || tick % 5 == 0) && this.canMoveDown(mapTiles) ->
+                Block(this.x, this.y + 1, this.shape)
+            !this.canMoveDown(mapTiles) -> {
+                this.stampOntoTiles(player)
+                null
+            }
+            else -> this
+        }
+
+    private fun Block.stampOntoTiles(player: Int) =
+        this.shape.getTiles(player).forEachIndexed { rowIndex, row ->
             row.forEachIndexed { tileIndex, tile ->
                 if (tile != 0) {
                     mapTiles[rowIndex + this.y][tileIndex + this.x] = tile
