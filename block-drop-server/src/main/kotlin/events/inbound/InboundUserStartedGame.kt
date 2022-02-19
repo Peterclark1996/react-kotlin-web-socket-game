@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import events.Receivable
 import kotlinx.serialization.Serializable
-import startGame
+import logic.startGame
 import state.Connection
 import state.ServerState
 import toEither

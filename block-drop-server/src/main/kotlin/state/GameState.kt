@@ -1,10 +1,11 @@
 package state
 
-class GameState private constructor(
-    private val mapTiles: Tiles,
-    private val players: Map<Int, Connection>,
-    private val blocks: Map<Int, Block?>,
-    private var tick: Int
+class GameState (
+    val mapTiles: Tiles,
+    val players: Map<Int, Connection>,
+    val blocks: Map<Int, Block?>,
+    val score: Int,
+    val currentTick: Int
 ) {
     companion object {
         fun createNew(players: List<Connection>): GameState {
@@ -22,11 +23,9 @@ class GameState private constructor(
                 it.key to null
             }.toMap()
 
-            return GameState(blankTiles, playersByIds, blocks, 0)
+            return GameState(blankTiles, playersByIds, blocks, 0, 0)
         }
     }
-
-    fun getTick() = tick
 
     fun getTilesWithBlocks(): Tiles {
         val updatedTiles = Array(mapTiles.size) {
@@ -52,57 +51,11 @@ class GameState private constructor(
         return updatedTiles
     }
 
-    fun getNextState(): GameState {
-        val updatedBlocks = blocks.mapValues { pair ->
-            val block = pair.value
-            block.getNextState(pair.key)
-        }
-        return GameState(mapTiles, players, updatedBlocks, tick + 1)
-    }
-
-    private fun Block?.getNextState(playerId: Int): Block? {
-        if (this == null) {
-            return Block.getRandomBlock(playerId)
-        }
-
-        val connection = players[playerId] ?: throw Error("Missing connection for id $playerId")
-        val blockAfterHorizontalMovement = this.handleHorizontalMovement(connection)
-        val blockAfterRotationalMovement = blockAfterHorizontalMovement.handleRotationalMovement(connection)
-        return blockAfterRotationalMovement.handleVerticalMovement(connection, tick, playerId)
-    }
-
-    private fun Block.handleHorizontalMovement(connection: Connection): Block =
-        when {
-            connection.pressingLeft && this.canMoveLeft(mapTiles) ->
-                Block(this.x - 1, this.y, this.shape)
-            connection.pressingRight && this.canMoveRight(mapTiles) ->
-                Block(this.x + 1, this.y, this.shape)
-            else -> this
-        }
-
-    private fun Block.handleRotationalMovement(connection: Connection): Block =
-        when {
-            connection.pressingRotateLeft -> this.rotateAntiClockwise()
-            connection.pressingRotateRight -> this.rotateClockwise()
-            else -> this
-        }
-
-    private fun Block.handleVerticalMovement(connection: Connection, tick: Int, player: Int): Block? =
-        when {
-            (connection.pressingDown || tick % 5 == 0) && this.canMoveDown(mapTiles) ->
-                Block(this.x, this.y + 1, this.shape)
-            !this.canMoveDown(mapTiles) -> {
-                this.stampOntoTiles(player)
-                null
-            }
-            else -> this
-        }
-
-    private fun Block.stampOntoTiles(player: Int) =
-        this.shape.getTiles(player).forEachIndexed { rowIndex, row ->
+    fun stampOntoTiles(player: Int, block: Block) =
+        block.shape.getTiles(player).forEachIndexed { rowIndex, row ->
             row.forEachIndexed { tileIndex, tile ->
                 if (tile != 0) {
-                    mapTiles[rowIndex + this.y][tileIndex + this.x] = tile
+                    mapTiles[rowIndex + block.y][tileIndex + block.x] = tile
                 }
             }
         }

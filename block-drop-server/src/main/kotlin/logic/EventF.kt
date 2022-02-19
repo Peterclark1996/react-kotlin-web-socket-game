@@ -4,6 +4,7 @@ import events.Event
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import logic.getAllConnectionsInRoom
 import state.ServerState
 
 suspend fun <T> Connection.sendEvent(

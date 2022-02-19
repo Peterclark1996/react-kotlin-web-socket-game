@@ -3,7 +3,7 @@ package events.inbound
 import arrow.core.Either
 import events.Receivable
 import events.outbound.OutboundRoomUsersUpdated
-import getAllUsersInRoom
+import logic.getAllUsersInRoom
 import kotlinx.serialization.Serializable
 import mapToUnit
 import sendEvent

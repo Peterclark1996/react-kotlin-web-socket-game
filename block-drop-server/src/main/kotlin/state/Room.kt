@@ -1,11 +1,12 @@
 package state
 
 import events.outbound.OutboundGameStateUpdated
-import getAllConnectionsInRoom
+import logic.getAllConnectionsInRoom
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import logic.getNextGameState
 import sendToRoom
 
 const val DELAY_BETWEEN_TICKS: Long = 200
@@ -22,7 +23,7 @@ class Room(val roomCode: String) {
             while (running) {
                 delay(DELAY_BETWEEN_TICKS)
 
-                currentGameState = currentGameState?.getNextState()
+                currentGameState = currentGameState?.getNextGameState()
                 val nullSafeCurrentGameState = currentGameState
                 if (nullSafeCurrentGameState == null) {
                     running = false
@@ -31,7 +32,7 @@ class Room(val roomCode: String) {
                         roomCode,
                         OutboundGameStateUpdated.serializer(),
                         OutboundGameStateUpdated(
-                            nullSafeCurrentGameState.getTick(),
+                            nullSafeCurrentGameState.currentTick,
                             nullSafeCurrentGameState.getTilesWithBlocks()
                         )
                     )

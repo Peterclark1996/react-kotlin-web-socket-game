@@ -8,6 +8,8 @@ import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import logic.getAllConnectionsInRoom
+import logic.getAllUsersInRoom
 import state.Connection
 import state.ServerState
 
