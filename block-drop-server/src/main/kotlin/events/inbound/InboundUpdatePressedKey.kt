@@ -22,7 +22,6 @@ data class InboundUpdatePressedKey(
                     currentConnection,
                     serverState,
                     false,
-                    ::canBlockRotateLeft,
                     ::rotateBlockClockwise
                 )
         }
@@ -33,7 +32,6 @@ data class InboundUpdatePressedKey(
                     currentConnection,
                     serverState,
                     false,
-                    ::canBlockRotateRight,
                     ::rotateBlockAntiClockwise
                 )
         }
@@ -44,7 +42,6 @@ data class InboundUpdatePressedKey(
                     currentConnection,
                     serverState,
                     true,
-                    ::canBlockMoveLeft,
                     ::translateBlockLeft
                 )
         }
@@ -55,7 +52,6 @@ data class InboundUpdatePressedKey(
                     currentConnection,
                     serverState,
                     true,
-                    ::canBlockMoveRight,
                     ::translateBlockRight
                 )
         }

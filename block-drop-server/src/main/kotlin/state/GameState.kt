@@ -65,12 +65,11 @@ fun updateBlockPositionForConnection(
     gameState: GameState,
     connection: Connection,
     disableHorizontalMovement: Boolean,
-    canMoveF: (Block, Tiles) -> Boolean,
     moveF: (Block) -> Block
 ): GameState {
     val player = gameState.players.find { it.connection == connection } ?: return gameState
     val block = player.block ?: return gameState
-    if (canMoveF(block, gameState.mapTiles)) {
+    if (canTransformBlock(block, gameState.mapTiles, moveF)) {
         val updatedPlayer = Player(
             player.id,
             player.connection,
@@ -108,12 +107,12 @@ fun GameState.getNextPlayerStateAfterBlockMovement(player: Player): Player {
 private fun Block.handleHorizontalMovement(player: Player, mapTiles: Tiles): Block =
     when {
         !player.blockHorizontalMovementThisTick &&
-        player.connection.pressingLeft &&
-        canBlockMoveLeft(this, mapTiles) ->
+                player.connection.pressingLeft &&
+                canTransformBlock(this, mapTiles, ::translateBlockLeft) ->
             translateBlockLeft(this)
         !player.blockHorizontalMovementThisTick &&
-        player.connection.pressingRight &&
-        canBlockMoveRight(this, mapTiles) ->
+                player.connection.pressingRight &&
+                canTransformBlock(this, mapTiles, ::translateBlockRight) ->
             translateBlockRight(this)
         else -> this
     }
@@ -121,9 +120,9 @@ private fun Block.handleHorizontalMovement(player: Player, mapTiles: Tiles): Blo
 private fun Block.handleVerticalMovement(player: Player, gameState: GameState): Block? =
     when {
         (player.connection.pressingDown || gameState.currentTick % 5 == 0) &&
-        canBlockMoveDown(this, gameState.mapTiles) ->
+                canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) ->
             translateBlockDown(this)
-        !canBlockMoveDown(this, gameState.mapTiles) -> {
+        !canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) -> {
             gameState.stampOntoTiles(player.id, this)
             null
         }

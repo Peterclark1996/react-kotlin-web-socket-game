@@ -36,7 +36,6 @@ class Room(val roomCode: String) {
         connection: Connection,
         serverState: ServerState,
         disableHorizontalMovement: Boolean,
-        canMoveF: (Block, Tiles) -> Boolean,
         moveF: (Block) -> Block
     ) {
         val nullSafeGameState = currentGameState ?: return
@@ -44,7 +43,6 @@ class Room(val roomCode: String) {
             nullSafeGameState,
             connection,
             disableHorizontalMovement,
-            canMoveF,
             moveF
         )
         updateClientsWithGameState(serverState)
