@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import logic.getNextGameState
 import sendToRoom
 
 const val DELAY_BETWEEN_TICKS: Long = 200
@@ -24,24 +23,46 @@ class Room(val roomCode: String) {
                 delay(DELAY_BETWEEN_TICKS)
 
                 currentGameState = currentGameState?.getNextGameState()
-                val nullSafeCurrentGameState = currentGameState
-                if (nullSafeCurrentGameState == null) {
-                    running = false
-                } else {
-                    serverState.sendToRoom(
-                        roomCode,
-                        OutboundGameStateUpdated.serializer(),
-                        OutboundGameStateUpdated(
-                            nullSafeCurrentGameState.currentTick,
-                            nullSafeCurrentGameState.getTilesWithBlocks()
-                        )
-                    )
-                }
+                updateClientsWithGameState(serverState)
             }
         }
     }
 
     fun stop() {
         running = false
+    }
+
+    suspend fun triggerPlayerStartMovement(
+        connection: Connection,
+        serverState: ServerState,
+        disableHorizontalMovement: Boolean,
+        canMoveF: (Block, Tiles) -> Boolean,
+        moveF: (Block) -> Block
+    ) {
+        val nullSafeGameState = currentGameState ?: return
+        currentGameState = updateBlockPositionForConnection(
+            nullSafeGameState,
+            connection,
+            disableHorizontalMovement,
+            canMoveF,
+            moveF
+        )
+        updateClientsWithGameState(serverState)
+    }
+
+    private suspend fun updateClientsWithGameState(serverState: ServerState) {
+        val nullSafeCurrentGameState = currentGameState
+        if (nullSafeCurrentGameState == null) {
+            running = false
+        } else {
+            serverState.sendToRoom(
+                roomCode,
+                OutboundGameStateUpdated.serializer(),
+                OutboundGameStateUpdated(
+                    nullSafeCurrentGameState.currentTick,
+                    nullSafeCurrentGameState.getTilesWithBlocks()
+                )
+            )
+        }
     }
 }
