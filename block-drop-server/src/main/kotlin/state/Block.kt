@@ -79,11 +79,37 @@ fun canBlockMoveRight(block: Block, mapTiles: Tiles): Boolean {
 }
 
 fun canBlockRotateLeft(block: Block, mapTiles: Tiles): Boolean {
-    // TODO
+    val rotatedSilhouette = rotateBlockAntiClockwise(block).shape.getSilhouette()
+    if(block.x + rotatedSilhouette.first().size >= mapTiles.first().size){
+        return false
+    }
+    if(block.y + rotatedSilhouette.size >= mapTiles.size){
+        return false
+    }
+    rotatedSilhouette.forEachIndexed { rowIndex, row ->
+        row.forEachIndexed { tileIndex, tile ->
+            if(tile && mapTiles[block.y + rowIndex][block.x + tileIndex] != 0){
+                return false
+            }
+        }
+    }
     return true
 }
 
 fun canBlockRotateRight(block: Block, mapTiles: Tiles): Boolean {
-    // TODO
+    val rotatedSilhouette = rotateBlockClockwise(block).shape.getSilhouette()
+    if(block.x + rotatedSilhouette.first().size > mapTiles.first().size){
+        return false
+    }
+    if(block.y + rotatedSilhouette.size > mapTiles.size){
+        return false
+    }
+    rotatedSilhouette.forEachIndexed { rowIndex, row ->
+        row.forEachIndexed { tileIndex, tile ->
+            if(tile && mapTiles[block.y + rowIndex][block.x + tileIndex] != 0){
+                return false
+            }
+        }
+    }
     return true
 }
