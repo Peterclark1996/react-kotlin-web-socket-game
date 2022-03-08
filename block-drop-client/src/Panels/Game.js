@@ -2,6 +2,7 @@ import Block from "../Components/Block"
 import { useWebSocket } from '../Contexts/WebSocketContext'
 import { useEffect, useState } from 'react'
 import { generateHtmlId } from '../helpers'
+import ActionTypes from "../Reducer/ActionTypes"
 
 const GameStateUpdatedEventId = generateHtmlId()
 
@@ -16,7 +17,7 @@ const blockColours = [
     "#C69437"   
 ]
 
-const Game = () => {
+const Game = ({ dispatch }) => {
     const { on } = useWebSocket()
 
     const [tiles, setTiles] = useState([[]])
@@ -24,10 +25,13 @@ const Game = () => {
     useEffect(() => {
         on(
             "OutboundGameStateUpdated", 
-            eventData => setTiles(eventData.tiles),
+            eventData => {
+                dispatch({ type: ActionTypes.PLAYER_SCORES_UPDATED, updatedPlayerScores: eventData.players })
+                setTiles(eventData.tiles)
+            },
             GameStateUpdatedEventId
         )
-    }, [on])
+    }, [on, dispatch])
 
     return(
         <div className="d-flex flex-column justify-content-center align-items-center">

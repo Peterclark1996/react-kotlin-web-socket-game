@@ -7,13 +7,14 @@ import events.outbound.OutboundRoomUsersUpdated
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
+import io.ktor.server.netty.*
 import io.ktor.websocket.*
 import logic.getAllConnectionsInRoom
 import logic.getAllUsersInRoom
 import state.Connection
 import state.ServerState
 
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 fun Application.module() {
     install(WebSockets)
@@ -37,7 +38,7 @@ fun Application.module() {
             } catch (e: Exception) {
                 println("ERROR: $e")
             } finally {
-                serverState.disconnectConnection(currentConnection)
+                serverState.disconnectConnection(currentConnection, serverState)
             }
         }
     }
@@ -74,7 +75,7 @@ suspend inline fun <reified T : Receivable> decodeAndProcessEvent(
         )
     }
 
-suspend fun ServerState.disconnectConnection(connection: Connection) {
+suspend fun ServerState.disconnectConnection(connection: Connection, serverState: ServerState) {
     this.removeConnection(connection)
     val room = this.getRooms().find { it.roomCode == connection.roomCode }
     if (room != null) {

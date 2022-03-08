@@ -7,6 +7,11 @@ const Reducer = (state, action) => {
                 ...state,
                 username: action.updatedUsername
             }
+        case ActionTypes.PLAYER_SCORES_UPDATED:
+            return {
+                ...state,
+                playerScores: action.updatedPlayerScores
+            }
         default:
             throw new Error(`Reducer action invalid: ${action.type}`)
     }

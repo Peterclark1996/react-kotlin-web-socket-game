@@ -4,4 +4,7 @@ import kotlinx.serialization.Serializable
 import state.Tiles
 
 @Serializable
-class OutboundGameStateUpdated(val tick: Int, val tiles: Tiles)
+data class Player(val name: String, val score: Int)
+
+@Serializable
+class OutboundGameStateUpdated(val tick: Int, val tiles: Tiles, val players: Set<Player>)

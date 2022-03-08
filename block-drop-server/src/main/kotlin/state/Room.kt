@@ -1,6 +1,7 @@
 package state
 
 import events.outbound.OutboundGameStateUpdated
+import events.outbound.Player
 import logic.getAllConnectionsInRoom
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -58,7 +59,10 @@ class Room(val roomCode: String) {
                 OutboundGameStateUpdated.serializer(),
                 OutboundGameStateUpdated(
                     nullSafeCurrentGameState.currentTick,
-                    nullSafeCurrentGameState.getTilesWithBlocks()
+                    nullSafeCurrentGameState.getTilesWithBlocks(),
+                    nullSafeCurrentGameState.players.map {
+                        Player(it.connection.username ?: "Unknown Player", it.score)
+                    }.toSet()
                 )
             )
         }

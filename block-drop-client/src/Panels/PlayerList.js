@@ -4,10 +4,10 @@ import { generateHtmlId } from '../helpers'
 
 const roomUsersUpdatedEventId = generateHtmlId()
 
-const PlayerList = () => {
+const PlayerList = ({ playerScores }) => {
     const { on, send } = useWebSocket()
 
-    const [players, setPlayers] = useState([])
+    const [connectedPlayers, setConnectedPlayers] = useState([])
 
     useEffect(() => {
         send("InboundRequestRoomUsers", {})
@@ -16,7 +16,7 @@ const PlayerList = () => {
     useEffect(() => {
         on(
             "OutboundRoomUsersUpdated", 
-            event => setPlayers(event.usernames), 
+            event => setConnectedPlayers(event.usernames), 
             roomUsersUpdatedEventId
         )
     }, [on])
@@ -25,7 +25,15 @@ const PlayerList = () => {
         <div className="d-flex flex-column align-items-center">
             <span className="border-bottom">Players</span>
                 {
-                    players.map(username => <span key={username}>{username}</span>)
+                    connectedPlayers.map(username => {
+                        const playerScore = playerScores.find(p => p.name === username)
+                        return (
+                            <div key={username}>
+                                <span>{username}</span>
+                                <span className="ms-2">{playerScore ? playerScore.score : 0}</span>
+                            </div>
+                        )
+                    })
                 }
         </div>
     )

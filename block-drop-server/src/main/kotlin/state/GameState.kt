@@ -1,16 +1,16 @@
 package state
 
-class Player(
+class PlayerState(
     val id: Int,
     val connection: Connection,
     val block: Block?,
-    val blockHorizontalMovementThisTick: Boolean = false
+    val score: Int,
+    val blockHorizontalMovementThisTick: Boolean
 )
 
 class GameState(
     val mapTiles: Tiles,
-    val players: List<Player>,
-    val score: Int,
+    val players: List<PlayerState>,
     val currentTick: Int
 ) {
     companion object {
@@ -21,9 +21,11 @@ class GameState(
                 Array(gridWidth) { 0 }
             }
 
-            val playerList = connections.mapIndexed { i, connection -> Player(i + 1, connection, null) }
+            val playerList = connections.mapIndexed { i, connection ->
+                PlayerState(i + 1, connection, null, 0, false)
+            }
 
-            return GameState(blankTiles, playerList, 0, 0)
+            return GameState(blankTiles, playerList, 0)
         }
     }
 
@@ -70,41 +72,52 @@ fun updateBlockPositionForConnection(
     val player = gameState.players.find { it.connection == connection } ?: return gameState
     val block = player.block ?: return gameState
     if (canTransformBlock(block, gameState.mapTiles, moveF)) {
-        val updatedPlayer = Player(
+        val updatedPlayer = PlayerState(
             player.id,
             player.connection,
             moveF(block),
+            player.score,
             player.blockHorizontalMovementThisTick || disableHorizontalMovement
         )
         val updatedPlayerList = gameState.players.filter { it.id != updatedPlayer.id }.plus(updatedPlayer)
-        return GameState(gameState.mapTiles, updatedPlayerList, gameState.score, gameState.currentTick)
+        return GameState(gameState.mapTiles, updatedPlayerList, gameState.currentTick)
     }
     return gameState
 }
 
 fun GameState.getNextGameState(): GameState {
-    val updatedPlayers = this.players.map { player ->
+    val playerWithUpdatedBlocks = this.players.map { player ->
         this.getNextPlayerStateAfterBlockMovement(player)
     }
 
     val rowsCompleted = countCompletedRows(this.mapTiles)
     val updatedTiles = this.getTilesWithoutCompletedRows()
 
-    return GameState(updatedTiles, updatedPlayers, this.score + rowsCompleted, this.currentTick + 1)
+    val playersWithUpdatedScore = playerWithUpdatedBlocks.map {
+        PlayerState(it.id, it.connection, it.block, it.score + (rowsCompleted * 100), it.blockHorizontalMovementThisTick)
+    }
+
+    return GameState(updatedTiles, playersWithUpdatedScore, this.currentTick + 1)
 }
 
-fun GameState.getNextPlayerStateAfterBlockMovement(player: Player): Player {
+fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerState {
     if (player.block == null) {
-        return Player(player.id, player.connection, Block.getRandomBlock())
+        return PlayerState(
+            player.id,
+            player.connection,
+            Block.getRandomBlock(),
+            player.score,
+            player.blockHorizontalMovementThisTick
+        )
     }
 
     val blockAfterAllMovement = player.block
         .handleHorizontalMovement(player, this.mapTiles)
         .handleVerticalMovement(player, this)
-    return Player(player.id, player.connection, blockAfterAllMovement, false)
+    return PlayerState(player.id, player.connection, blockAfterAllMovement, player.score, false)
 }
 
-private fun Block.handleHorizontalMovement(player: Player, mapTiles: Tiles): Block =
+private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles): Block =
     when {
         !player.blockHorizontalMovementThisTick &&
                 player.connection.pressingLeft &&
@@ -117,7 +130,7 @@ private fun Block.handleHorizontalMovement(player: Player, mapTiles: Tiles): Blo
         else -> this
     }
 
-private fun Block.handleVerticalMovement(player: Player, gameState: GameState): Block? =
+private fun Block.handleVerticalMovement(player: PlayerState, gameState: GameState): Block? =
     when {
         (player.connection.pressingDown || gameState.currentTick % 5 == 0) &&
                 canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) ->

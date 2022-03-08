@@ -11,7 +11,8 @@ const App = () => {
     const [state, dispatch] = useReducer(
         Reducer,
         {
-            username: ""
+            username: "",
+            playerScores: []
         }
     )
 

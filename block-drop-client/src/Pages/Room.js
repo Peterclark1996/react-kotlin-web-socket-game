@@ -75,10 +75,10 @@ const Room = ({ state, dispatch }) => {
                     </Overlay> :
                     <div className="d-flex w-100">
                         <div className="SidePanel">
-                            <LeftPanel hasGameStarted={hasGameStarted} />
+                            <LeftPanel playerScores={state.playerScores} hasGameStarted={hasGameStarted} />
                         </div>
                         <div className="MainPanel">
-                            <Game />
+                            <Game dispatch={dispatch} />
                         </div>
                     </div>
             }
