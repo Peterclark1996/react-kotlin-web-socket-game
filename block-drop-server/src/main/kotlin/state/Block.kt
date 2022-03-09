@@ -24,6 +24,17 @@ data class Block(val x: Int, val y: Int, val shape: BlockShape) {
             return Block(0, 0, selectedShape)
         }
     }
+
+    fun isOverlappingTiles(mapTiles: Tiles): Boolean{
+        this.shape.getSilhouette().forEachIndexed { rowIndex, row ->
+            row.forEachIndexed { tileIndex, tile ->
+                if(tile && mapTiles[this.y + rowIndex][this.x + tileIndex] != 0){
+                    return true
+                }
+            }
+        }
+        return false
+    }
 }
 
 fun rotateBlockClockwise(block: Block) = Block(block.x, block.y, block.shape.rotateClockwise())
@@ -50,12 +61,5 @@ fun canTransformBlock(block: Block, mapTiles: Tiles, transformF: (Block) -> Bloc
     if(transformedBlock.y + transformedBlock.shape.getSilhouette().size > mapTiles.size){
         return false
     }
-    transformedBlock.shape.getSilhouette().forEachIndexed { rowIndex, row ->
-        row.forEachIndexed { tileIndex, tile ->
-            if(tile && mapTiles[transformedBlock.y + rowIndex][transformedBlock.x + tileIndex] != 0){
-                return false
-            }
-        }
-    }
-    return true
+    return !transformedBlock.isOverlappingTiles(mapTiles)
 }

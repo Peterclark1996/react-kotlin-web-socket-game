@@ -7,10 +7,10 @@ const Reducer = (state, action) => {
                 ...state,
                 username: action.updatedUsername
             }
-        case ActionTypes.PLAYER_SCORES_UPDATED:
+        case ActionTypes.PLAYER_STATE_UPDATED:
             return {
                 ...state,
-                playerScores: action.updatedPlayerScores
+                playerState: action.updatedPlayerState
             }
         default:
             throw new Error(`Reducer action invalid: ${action.type}`)

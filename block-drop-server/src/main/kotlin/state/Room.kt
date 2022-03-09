@@ -7,7 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import sendToRoom
+import logic.sendToRoom
 
 const val DELAY_BETWEEN_TICKS: Long = 200
 
@@ -61,7 +61,7 @@ class Room(val roomCode: String) {
                     nullSafeCurrentGameState.currentTick,
                     nullSafeCurrentGameState.getTilesWithBlocks(),
                     nullSafeCurrentGameState.players.map {
-                        Player(it.connection.username ?: "Unknown Player", it.score)
+                        Player(it.connection.username ?: "Unknown Player", it.score, it.isDead)
                     }.toSet()
                 )
             )

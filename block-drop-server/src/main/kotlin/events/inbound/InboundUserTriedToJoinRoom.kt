@@ -9,8 +9,8 @@ import events.outbound.OutboundUserTriedToJoinRoomSuccess
 import logic.getAllUsersInRoom
 import kotlinx.serialization.Serializable
 import mapToUnit
-import sendEvent
-import sendToRoom
+import logic.sendEvent
+import logic.sendToRoom
 import state.Connection
 import state.ServerState
 

@@ -4,7 +4,7 @@ import { generateHtmlId } from '../helpers'
 
 const roomUsersUpdatedEventId = generateHtmlId()
 
-const PlayerList = ({ playerScores }) => {
+const PlayerList = ({ playerState }) => {
     const { on, send } = useWebSocket()
 
     const [connectedPlayers, setConnectedPlayers] = useState([])
@@ -26,11 +26,11 @@ const PlayerList = ({ playerScores }) => {
             <span className="border-bottom">Players</span>
                 {
                     connectedPlayers.map(username => {
-                        const playerScore = playerScores.find(p => p.name === username)
+                        const player = playerState.find(p => p.name === username)
                         return (
                             <div key={username}>
-                                <span>{username}</span>
-                                <span className="ms-2">{playerScore ? playerScore.score : 0}</span>
+                                    <span className={player && player.isDead ? "StrikeThrough" : ""}>{username}</span>
+                                    <span className="ms-2">{player ? player.score : 0}</span>
                             </div>
                         )
                     })

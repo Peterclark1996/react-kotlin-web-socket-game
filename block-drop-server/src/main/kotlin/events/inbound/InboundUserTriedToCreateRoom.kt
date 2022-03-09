@@ -6,7 +6,7 @@ import arrow.core.Either
 import events.Receivable
 import events.outbound.OutboundUserTriedToCreateRoomFailure
 import events.outbound.OutboundUserTriedToCreateRoomSuccess
-import sendEvent
+import logic.sendEvent
 import logic.getUnusedRoomCode
 import kotlinx.serialization.*
 import state.ServerState

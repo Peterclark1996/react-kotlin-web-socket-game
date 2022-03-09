@@ -26,7 +26,7 @@ const Game = ({ dispatch }) => {
         on(
             "OutboundGameStateUpdated", 
             eventData => {
-                dispatch({ type: ActionTypes.PLAYER_SCORES_UPDATED, updatedPlayerScores: eventData.players })
+                dispatch({ type: ActionTypes.PLAYER_STATE_UPDATED, updatedPlayerState: eventData.players })
                 setTiles(eventData.tiles)
             },
             GameStateUpdatedEventId

@@ -46,3 +46,7 @@
   -webkit-box-shadow: 0 0 20px #000000;
   box-shadow: 0 0 20px #000000;
 }
+
+.StrikeThrough {
+  text-decoration: line-through;
+}

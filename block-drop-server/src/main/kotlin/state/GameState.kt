@@ -1,13 +1,5 @@
 package state
 
-class PlayerState(
-    val id: Int,
-    val connection: Connection,
-    val block: Block?,
-    val score: Int,
-    val blockHorizontalMovementThisTick: Boolean
-)
-
 class GameState(
     val mapTiles: Tiles,
     val players: List<PlayerState>,
@@ -22,7 +14,14 @@ class GameState(
             }
 
             val playerList = connections.mapIndexed { i, connection ->
-                PlayerState(i + 1, connection, null, 0, false)
+                PlayerState(
+                    i + 1,
+                    connection,
+                    null,
+                    0,
+                    blockHorizontalMovementThisTick = false,
+                    isDead = false
+                )
             }
 
             return GameState(blankTiles, playerList, 0)
@@ -77,7 +76,8 @@ fun updateBlockPositionForConnection(
             player.connection,
             moveF(block),
             player.score,
-            player.blockHorizontalMovementThisTick || disableHorizontalMovement
+            player.blockHorizontalMovementThisTick || disableHorizontalMovement,
+            player.isDead
         )
         val updatedPlayerList = gameState.players.filter { it.id != updatedPlayer.id }.plus(updatedPlayer)
         return GameState(gameState.mapTiles, updatedPlayerList, gameState.currentTick)
@@ -94,7 +94,14 @@ fun GameState.getNextGameState(): GameState {
     val updatedTiles = this.getTilesWithoutCompletedRows()
 
     val playersWithUpdatedScore = playerWithUpdatedBlocks.map {
-        PlayerState(it.id, it.connection, it.block, it.score + (rowsCompleted * 100), it.blockHorizontalMovementThisTick)
+        PlayerState(
+            it.id,
+            it.connection,
+            it.block,
+            it.score + (rowsCompleted * 100),
+            it.blockHorizontalMovementThisTick,
+            it.isDead
+        )
     }
 
     return GameState(updatedTiles, playersWithUpdatedScore, this.currentTick + 1)
@@ -102,19 +109,24 @@ fun GameState.getNextGameState(): GameState {
 
 fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerState {
     if (player.block == null) {
+        val newBlock =
+            if (player.isDead) { null }
+            else { Block.getRandomBlock() }
+        val hasThePlayerJustDied = newBlock?.isOverlappingTiles(this.mapTiles) ?: true
         return PlayerState(
             player.id,
             player.connection,
-            Block.getRandomBlock(),
+            if(hasThePlayerJustDied) null else newBlock,
             player.score,
-            player.blockHorizontalMovementThisTick
+            player.blockHorizontalMovementThisTick,
+            hasThePlayerJustDied
         )
     }
 
     val blockAfterAllMovement = player.block
         .handleHorizontalMovement(player, this.mapTiles)
         .handleVerticalMovement(player, this)
-    return PlayerState(player.id, player.connection, blockAfterAllMovement, player.score, false)
+    return PlayerState(player.id, player.connection, blockAfterAllMovement, player.score, false, player.isDead)
 }
 
 private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles): Block =

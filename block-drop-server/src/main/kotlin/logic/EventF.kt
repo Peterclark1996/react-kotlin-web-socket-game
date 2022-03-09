@@ -1,11 +1,15 @@
+package logic
+
 import state.Connection
 import arrow.core.Either
 import events.Event
+import flatten
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import logic.getAllConnectionsInRoom
 import state.ServerState
+import toLeft
+import toRight
 
 suspend fun <T> Connection.sendEvent(
     serializer: KSerializer<T>,

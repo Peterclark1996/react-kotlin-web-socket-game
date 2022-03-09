@@ -12,7 +12,7 @@ const App = () => {
         Reducer,
         {
             username: "",
-            playerScores: []
+            playerState: []
         }
     )
 

@@ -3,7 +3,6 @@ package logic
 import arrow.core.flatMap
 import events.outbound.OutboundGameStarted
 import mapToUnit
-import sendToRoom
 import state.*
 import toEither
 import java.util.*

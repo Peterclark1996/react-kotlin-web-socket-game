@@ -11,6 +11,7 @@ import io.ktor.server.netty.*
 import io.ktor.websocket.*
 import logic.getAllConnectionsInRoom
 import logic.getAllUsersInRoom
+import logic.sendToRoom
 import state.Connection
 import state.ServerState
 

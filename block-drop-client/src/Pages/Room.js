@@ -75,7 +75,7 @@ const Room = ({ state, dispatch }) => {
                     </Overlay> :
                     <div className="d-flex w-100">
                         <div className="SidePanel">
-                            <LeftPanel playerScores={state.playerScores} hasGameStarted={hasGameStarted} />
+                            <LeftPanel playerState={state.playerState} hasGameStarted={hasGameStarted} />
                         </div>
                         <div className="MainPanel">
                             <Game dispatch={dispatch} />
