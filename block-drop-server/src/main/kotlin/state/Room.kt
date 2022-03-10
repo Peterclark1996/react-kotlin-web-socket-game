@@ -16,7 +16,11 @@ class Room(val roomCode: String) {
     private var currentGameState: GameState? = null
 
     fun start(serverState: ServerState) {
-        currentGameState = GameState.createNew(serverState.getAllConnectionsInRoom(roomCode))
+        currentGameState =
+            GameState.createNew(serverState.getAllConnectionsInRoom(roomCode), 20, 12).orNull()
+        if (currentGameState == null) {
+            return
+        }
 
         running = true
         CoroutineScope(Job()).launch {

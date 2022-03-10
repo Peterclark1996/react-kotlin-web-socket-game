@@ -1,16 +1,39 @@
 package state
 
+import arrow.core.Either
+import toLeft
+import toRight
+import kotlin.math.ceil
+import kotlin.math.floor
+
 class GameState(
     val mapTiles: Tiles,
     val players: List<PlayerState>,
-    val currentTick: Int
+    val currentTick: Int,
+    val spawnBlocks: List<Boolean>
 ) {
     companion object {
-        fun createNew(connections: List<Connection>): GameState {
-            val gridHeight = 10
-            val gridWidth = 10
-            val blankTiles = Array(gridHeight) {
-                Array(gridWidth) { 0 }
+        fun createNew(connections: List<Connection>, gridHeight: Int, gridWidth: Int): Either<Error, GameState> {
+            if (gridHeight < 5) return Error("Height is too small").toLeft()
+
+            val centerSpawnBlocks =
+                connections.map { Array(4) { false } }.reduce { acc, next -> acc.plus(true).plus(next) }
+
+            if (centerSpawnBlocks.size > gridWidth) return Error("Width is too small").toLeft()
+
+            val remainingWidth = (gridWidth - centerSpawnBlocks.size).toFloat()
+            val spawnBlocks = Array(ceil(remainingWidth / 2).toInt()) { true }
+                .plus(centerSpawnBlocks)
+                .plus(Array(floor(remainingWidth / 2).toInt()) { true })
+
+            val blankTiles = Array(gridHeight) { row ->
+                Array(gridWidth) { cell ->
+                    if (row < 4 && spawnBlocks[cell]) {
+                        -1
+                    } else {
+                        0
+                    }
+                }
             }
 
             val playerList = connections.mapIndexed { i, connection ->
@@ -24,7 +47,12 @@ class GameState(
                 )
             }
 
-            return GameState(blankTiles, playerList, 0)
+            return GameState(
+                blankTiles,
+                playerList,
+                0,
+                spawnBlocks.toList()
+            ).toRight()
         }
     }
 
@@ -80,7 +108,7 @@ fun updateBlockPositionForConnection(
             player.isDead
         )
         val updatedPlayerList = gameState.players.filter { it.id != updatedPlayer.id }.plus(updatedPlayer)
-        return GameState(gameState.mapTiles, updatedPlayerList, gameState.currentTick)
+        return GameState(gameState.mapTiles, updatedPlayerList, gameState.currentTick, gameState.spawnBlocks)
     }
     return gameState
 }
@@ -104,19 +132,30 @@ fun GameState.getNextGameState(): GameState {
         )
     }
 
-    return GameState(updatedTiles, playersWithUpdatedScore, this.currentTick + 1)
+    return GameState(updatedTiles, playersWithUpdatedScore, this.currentTick + 1, spawnBlocks)
 }
 
 fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerState {
     if (player.block == null) {
         val newBlock =
-            if (player.isDead) { null }
-            else { Block.getRandomBlock() }
+            if (player.isDead) {
+                null
+            } else {
+                val newRandomShape = BlockShape.getRandomBlockShape()
+                val playerSpawnOffset =
+                    ((this.mapTiles.first().size - ((this.players.count() * 5) - 1)) / 2) + ((player.id - 1) * 5)
+                val blockOffset = (4 - newRandomShape.getSilhouette().first().size) / 2
+                Block(
+                    playerSpawnOffset + blockOffset,
+                    0,
+                    newRandomShape
+                )
+            }
         val hasThePlayerJustDied = newBlock?.isOverlappingTiles(this.mapTiles) ?: true
         return PlayerState(
             player.id,
             player.connection,
-            if(hasThePlayerJustDied) null else newBlock,
+            if (hasThePlayerJustDied) null else newBlock,
             player.score,
             player.blockHorizontalMovementThisTick,
             hasThePlayerJustDied
@@ -126,7 +165,14 @@ fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerS
     val blockAfterAllMovement = player.block
         .handleHorizontalMovement(player, this.mapTiles)
         .handleVerticalMovement(player, this)
-    return PlayerState(player.id, player.connection, blockAfterAllMovement, player.score, false, player.isDead)
+    return PlayerState(
+        player.id,
+        player.connection,
+        blockAfterAllMovement,
+        player.score,
+        false,
+        player.isDead
+    )
 }
 
 private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles): Block =
@@ -160,14 +206,33 @@ private fun countCompletedRows(tiles: Tiles): Int =
     }.size
 
 private fun GameState.getTilesWithoutCompletedRows(): Tiles {
-    val notCompletedRows = this.mapTiles.filter { row ->
+    val nonCompletedRows = this.mapTiles.filter { row ->
         row.any { tile -> tile == 0 }
     }
-    val rowsToAdd = mapTiles.size - notCompletedRows.size
+    val rowsToAdd = mapTiles.size - nonCompletedRows.size
     if (rowsToAdd <= 0) return this.mapTiles
 
     val emptyTilesToPrepend = Array(rowsToAdd) {
         Array(this.mapTiles.first().size) { 0 }
     }
-    return emptyTilesToPrepend.plus(notCompletedRows)
+
+    val tilesWithoutSpawnBlocks = emptyTilesToPrepend.plus(nonCompletedRows).map { row ->
+        row.map { cell ->
+            if(cell == -1) 0
+            else cell
+        }
+    }
+
+    val tilesWithSpawnBlocks = tilesWithoutSpawnBlocks.mapIndexed { rowIndex, row ->
+        if(rowIndex > 3){
+            row.toTypedArray()
+        }else{
+            row.mapIndexed { cellIndex, cell ->
+                if(this.spawnBlocks[cellIndex]) -1
+                else cell
+            }.toTypedArray()
+        }
+    }.toTypedArray()
+
+    return tilesWithSpawnBlocks
 }

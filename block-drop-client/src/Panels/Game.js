@@ -3,6 +3,7 @@ import { useWebSocket } from '../Contexts/WebSocketContext'
 import { useEffect, useState } from 'react'
 import { generateHtmlId } from '../helpers'
 import ActionTypes from "../Reducer/ActionTypes"
+import GameSide from "../Components/GameSide"
 
 const GameStateUpdatedEventId = generateHtmlId()
 
@@ -33,22 +34,32 @@ const Game = ({ dispatch }) => {
         )
     }, [on, dispatch])
 
+    if(tiles.length === 0 || tiles[0].length === 0){
+        return <div></div>
+    }
+
     return(
-        <div className="d-flex flex-column justify-content-center align-items-center">
-            {
-                tiles.map((row, rowIndex) => 
-                    <div key={`row-${rowIndex}`} className="d-flex">
-                        {
-                            row.map((cell, cellIndex) => {
-                                if(cell === -1){
-                                    return <Block key={`cell--${rowIndex}-${cellIndex}`} colour={"#000000"} />
-                                }
-                                return <Block key={`cell--${rowIndex}-${cellIndex}`} colour={blockColours[cell]} />
-                            })
-                        }
-                    </div>
-                )
-            }
+        <div className="d-flex justify-content-center">
+            <GameSide size={tiles.length + 2} isColumn={true} />
+            <div className="d-flex flex-column">
+                <GameSide size={tiles[0].length} />
+                {
+                    tiles.map((row, rowIndex) => 
+                        <div key={`row-${rowIndex}`} className="d-flex">
+                            {
+                                row.map((cell, cellIndex) => {
+                                    if(cell === -1){
+                                        return <Block key={`cell-${rowIndex}-${cellIndex}`} colour="#B7B7B7" />
+                                    }
+                                    return <Block key={`cell-${rowIndex}-${cellIndex}`} colour={blockColours[cell]} />
+                                })
+                            }
+                        </div>
+                    )
+                }
+                <GameSide size={tiles[0].length} />
+            </div>
+            <GameSide size={tiles.length + 2} isColumn={true} />
         </div>
     )
 }

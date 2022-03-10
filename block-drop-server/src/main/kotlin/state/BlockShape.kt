@@ -9,6 +9,18 @@ class BlockShape private constructor(
     private val rotationIndex: Int = rotations.indices.random()
 ) {
     companion object {
+        fun getRandomBlockShape(): BlockShape {
+            val possibleShapes = listOf(
+                ::createShapeOne,
+                ::createShapeTwo,
+                ::createShapeThree,
+                ::createShapeFour,
+                ::createShapeFive,
+                ::createShapeSix,
+                ::createShapeSeven
+            )
+            return possibleShapes.random().invoke()
+        }
         fun createShapeOne() =
             BlockShape(listOf(shapeOne, shapeOneClockwise, shapeOneHalfRotation, shapeOneAntiClockwise))
         fun createShapeTwo() =

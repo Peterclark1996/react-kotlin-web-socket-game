@@ -9,22 +9,6 @@ import state.BlockShape.Companion.createShapeThree
 import state.BlockShape.Companion.createShapeTwo
 
 data class Block(val x: Int, val y: Int, val shape: BlockShape) {
-    companion object {
-        fun getRandomBlock(): Block {
-            val possibleShapes = listOf(
-                ::createShapeOne,
-                ::createShapeTwo,
-                ::createShapeThree,
-                ::createShapeFour,
-                ::createShapeFive,
-                ::createShapeSix,
-                ::createShapeSeven
-            )
-            val selectedShape = possibleShapes.random().invoke()
-            return Block(0, 0, selectedShape)
-        }
-    }
-
     fun isOverlappingTiles(mapTiles: Tiles): Boolean{
         this.shape.getSilhouette().forEachIndexed { rowIndex, row ->
             row.forEachIndexed { tileIndex, tile ->

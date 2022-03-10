@@ -68,7 +68,7 @@ const Controls = () => {
     }), [pressingDown, pressingLeft, pressingRight, pressingRotateLeft, pressingRotateRight, send])
 
     return(
-        <div className="d-flex flex-column justify-content-center">
+        <div className="d-flex flex-column justify-content-center user-select-none">
             <div className="d-flex justify-content-center">
                 <div className={`${keyClassName} ${pressingRotateLeft ? "Pressed" : ""}`}>
                     Q/⟲
