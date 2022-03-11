@@ -15,8 +15,10 @@ class Room(val roomCode: String) {
     private var currentGameState: GameState? = null
 
     fun start(serverState: ServerState) {
+        val players = serverState.getAllConnectionsInRoom(roomCode)
+        val minimumSize = (players.size * 5) + 1
         currentGameState =
-            createNewGameState(serverState.getAllConnectionsInRoom(roomCode), 20, 12).orNull()
+            createNewGameState(players, 20, maxOf(minimumSize, 12)).orNull()
         if (currentGameState == null) {
             return
         }
