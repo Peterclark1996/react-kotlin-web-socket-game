@@ -2,12 +2,11 @@ package state
 
 import events.outbound.OutboundGameStateUpdated
 import events.outbound.Player
-import logic.getAllConnectionsInRoom
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import logic.sendToRoom
+import logic.*
 
 const val DELAY_BETWEEN_TICKS: Long = 200
 
@@ -17,7 +16,7 @@ class Room(val roomCode: String) {
 
     fun start(serverState: ServerState) {
         currentGameState =
-            GameState.createNew(serverState.getAllConnectionsInRoom(roomCode), 20, 12).orNull()
+            createNewGameState(serverState.getAllConnectionsInRoom(roomCode), 20, 12).orNull()
         if (currentGameState == null) {
             return
         }
