@@ -10,8 +10,10 @@ const PlayerList = ({ playerState }) => {
     const [connectedPlayers, setConnectedPlayers] = useState([])
 
     useEffect(() => {
-        send("InboundRequestRoomUsers", {})
-    }, [send])
+        if(connectedPlayers.length === 0){
+            send("InboundRequestRoomUsers", {})
+        }
+    }, [connectedPlayers.length, send])
 
     useEffect(() => {
         on(

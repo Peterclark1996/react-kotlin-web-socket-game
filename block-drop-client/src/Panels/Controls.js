@@ -13,8 +13,6 @@ const KEY_E = 69
 const Controls = () => {
     const { send } = useWebSocket()
 
-    const keyClassName = "d-flex border m-2 Key align-items-center justify-content-center"
-
     const [pressingLeft, setPressingLeft] = useState(false)
     const [pressingRight, setPressingRight] = useState(false)
     const [pressingDown, setPressingDown] = useState(false)
@@ -66,6 +64,8 @@ const Controls = () => {
         pressingRotateRight,
         pressingRotateLeft
     }), [pressingDown, pressingLeft, pressingRight, pressingRotateLeft, pressingRotateRight, send])
+
+    const keyClassName = "d-flex border m-2 Key align-items-center justify-content-center"
 
     return(
         <div className="d-flex flex-column justify-content-center user-select-none">

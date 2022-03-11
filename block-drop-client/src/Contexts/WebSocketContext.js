@@ -38,18 +38,18 @@ export const WebSocketProvider = props => {
         ])
     }, [eventListeners])
 
-    const sendToSocket = (eventType, eventData) => {
-        if(connectionState !== 1) return
-        
-        connection.send(
-            JSON.stringify(
-                {
-                    type: eventType,
-                    jsonData: JSON.stringify(eventData)
-                }
+    const sendToSocket = useCallback((eventType, eventData) => {
+            if(connectionState !== 1) return
+            
+            connection.send(
+                JSON.stringify(
+                    {
+                        type: eventType,
+                        jsonData: JSON.stringify(eventData)
+                    }
+                )
             )
-        )
-    }
+        }, [connection, connectionState])
 
     const disconnectFromSocket = () => {
         
