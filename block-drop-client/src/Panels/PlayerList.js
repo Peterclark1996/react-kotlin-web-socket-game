@@ -1,27 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useWebSocket } from '../Contexts/WebSocketContext'
-import { generateHtmlId } from '../helpers'
 
-const roomUsersUpdatedEventId = generateHtmlId()
-
-const PlayerList = ({ playerState }) => {
+const PlayerList = ({ connectedPlayers, playerState }) => {
     const { on, send } = useWebSocket()
 
-    const [connectedPlayers, setConnectedPlayers] = useState([])
+    const isMounted = useRef(true)
 
     useEffect(() => {
-        if(connectedPlayers.length === 0){
-            send("InboundRequestRoomUsers", {})
-        }
-    }, [connectedPlayers.length, send])
+        isMounted.current = true
+        return () => isMounted.current = false
+    },[])
 
     useEffect(() => {
-        on(
-            "OutboundRoomUsersUpdated", 
-            event => setConnectedPlayers(event.usernames), 
-            roomUsersUpdatedEventId
-        )
-    }, [on])
+        if(!isMounted.current) return
+        if(connectedPlayers.length > 0) return
+
+        send("InboundRequestRoomUsers", {})
+        
+    }, [connectedPlayers.length, on, send])
 
     return(
         <div className="d-flex flex-column align-items-center">

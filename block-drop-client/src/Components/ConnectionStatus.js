@@ -1,11 +1,11 @@
-import { useWebSocket } from "../Contexts/WebSocketContext"
+import { ConnectionStateType, useWebSocket } from "../Contexts/WebSocketContext"
 
 const ConnectionStatus = () => {
     const { connectionState } = useWebSocket()
 
     const getStatus = () => {
-        if(connectionState === 0) return <span className="text-warning">Connecting</span>
-        if(connectionState === 1) return <span className="text-success">Connected</span>
+        if(connectionState === ConnectionStateType.CONNECTING) return <span className="text-warning">Connecting</span>
+        if(connectionState === ConnectionStateType.OPEN) return <span className="text-success">Connected</span>
         return <span className="text-danger">Disconnected</span>
     }
 

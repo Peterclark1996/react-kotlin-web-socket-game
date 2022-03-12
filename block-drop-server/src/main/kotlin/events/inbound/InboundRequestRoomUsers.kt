@@ -14,14 +14,17 @@ import toEither
 import toRight
 
 @Serializable
-class InboundRequestRoomUsers: Receivable {
-    override suspend fun onReceive(currentConnection: Connection, serverState: ServerState): Either<Error, Unit> =
-        currentConnection.roomCode?.let { room ->
-            currentConnection.sendEvent(
-                OutboundRoomUsersUpdated.serializer(),
-                OutboundRoomUsersUpdated(
-                    serverState.getAllUsersInRoom(room)
-                )
+class InboundRequestRoomUsers : Receivable {
+    override suspend fun onReceive(currentConnection: Connection, serverState: ServerState): Either<Error, Unit> {
+        val room = currentConnection.roomCode ?: return Unit.toRight()
+
+        val roomsPlayers = serverState.getAllUsersInRoom(room)
+
+        return currentConnection.sendEvent(
+            OutboundRoomUsersUpdated.serializer(),
+            OutboundRoomUsersUpdated(
+                roomsPlayers
             )
-        } ?: Unit.toRight()
+        )
+    }
 }

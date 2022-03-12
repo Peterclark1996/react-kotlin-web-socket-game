@@ -6,15 +6,18 @@ const maxRetries = 5
 
 const WebSocketContext = createContext()
 
+export const ConnectionStateType = {
+    CONNECTING: "CONNECTING",
+    OPEN: "OPEN",
+    CLOSING: "CLOSING",
+    CLOSED: "CLOSED"
+}
+
 export const WebSocketProvider = props => {
     const [connection, setConnection] = useState()
     const [eventListeners, setEventListeners] = useState([])
 
-    // 0	CONNECTING
-    // 1	OPEN
-    // 2	CLOSING
-    // 3	CLOSED
-    const [connectionState, setConnectionState] = useState(3)
+    const [connectionState, setConnectionState] = useState(ConnectionStateType.CLOSED)
     const [hasFailedToConnect, setHasFailedToConnect] = useState(false)
 
     const onEventReceived = useCallback(event => {
@@ -39,7 +42,7 @@ export const WebSocketProvider = props => {
     }, [eventListeners])
 
     const sendToSocket = useCallback((eventType, eventData) => {
-            if(connectionState !== 1) return
+            if(connectionState !== ConnectionStateType.OPEN) return
             
             connection.send(
                 JSON.stringify(
@@ -60,7 +63,7 @@ export const WebSocketProvider = props => {
 
         if(limitedRetries && retriesRemaining === 0){
             setConnection()
-            setConnectionState(3)
+            setConnectionState(ConnectionStateType.CLOSED)
             setHasFailedToConnect(true)
             return
         }
@@ -70,18 +73,18 @@ export const WebSocketProvider = props => {
             return
         }
 
-        if(connectionState === 0 || connectionState === 1) return
+        if(connectionState === ConnectionStateType.CONNECTING || connectionState === ConnectionStateType.OPEN) return
 
         console.log("Socket connecting to:", socketUrl)
-        setConnectionState(0)
+        setConnectionState(ConnectionStateType.CONNECTING)
 
         const reconnectToSocketOnClose = (reason, retries = maxRetries) => {
 
-            setConnectionState(0)
+            setConnectionState(ConnectionStateType.CONNECTING)
  
             if(limitedRetries && retries === 1){
                 setConnection()
-                setConnectionState(3)
+                setConnectionState(ConnectionStateType.CLOSED)
                 setHasFailedToConnect(true)
                 return
             }
@@ -99,7 +102,7 @@ export const WebSocketProvider = props => {
         newConnection.onopen = () => {
             console.log("Socket connected")
             setConnection(newConnection)
-            setConnectionState(1)
+            setConnectionState(ConnectionStateType.OPEN)
             setHasFailedToConnect(false)
             newConnection.onclose = event => reconnectToSocketOnClose(event.reason)
         }

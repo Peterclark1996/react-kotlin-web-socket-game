@@ -10,6 +10,7 @@ import ConnectionStatus from '../Components/ConnectionStatus'
 import LineBreak from '../Components/LineBreak'
 import LeftPanel from '../Panels/LeftPanel'
 
+const roomUsersUpdatedEventId = generateHtmlId()
 const joinSuccessEventId = generateHtmlId()
 const joinFailEventId = generateHtmlId()
 const gameStartedEventId = generateHtmlId()
@@ -35,6 +36,11 @@ const Room = ({ state, dispatch }) => {
     }
 
     useEffect(() => {
+        on(
+            "OutboundRoomUsersUpdated", 
+            eventData => dispatch({ type: ActionTypes.CONNECTED_PLAYERS_UPDATED, updatedConnectedPlayers: eventData.usernames }), 
+            roomUsersUpdatedEventId
+        )
         on(
             "OutboundUserTriedToJoinRoomSuccess", 
             eventData => dispatch({ type: ActionTypes.USERNAME_UPDATED, updatedUsername: eventData.username }),
@@ -75,7 +81,7 @@ const Room = ({ state, dispatch }) => {
                     </Overlay> :
                     <div className="d-flex w-100">
                         <div className="SidePanel">
-                            <LeftPanel playerState={state.playerState} hasGameStarted={hasGameStarted} />
+                            <LeftPanel state={state} dispatch={dispatch} hasGameStarted={hasGameStarted} />
                         </div>
                         <div className="MainPanel">
                             <Game dispatch={dispatch} />

@@ -1,8 +1,9 @@
 import { useHistory } from 'react-router-dom'
 import { useWebSocket } from '../Contexts/WebSocketContext'
 import { ROUTE_HOME } from '../helpers'
+import ActionTypes from '../Reducer/ActionTypes'
 
-const GameButtons = ({ hasGameStarted }) => {
+const GameButtons = ({ hasGameStarted, dispatch }) => {
     const { send } = useWebSocket()
     const history = useHistory()
 
@@ -11,6 +12,7 @@ const GameButtons = ({ hasGameStarted }) => {
     }
 
     const onLeaveGameClicked = () => {
+        dispatch({ type: ActionTypes.RESET_STATE })
         history.push(`${ROUTE_HOME}`)
     }
 

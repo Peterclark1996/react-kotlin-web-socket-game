@@ -4,17 +4,11 @@ import Home from './Pages/Home'
 import * as WebSocketContext from './Contexts/WebSocketContext'
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom"
 import { ROUTE_HOME, ROUTE_ROOM } from './helpers'
-import Reducer from './Reducer/Reducer'
+import Reducer, { defaultState } from './Reducer/Reducer'
 import { useReducer } from 'react'
 
 const App = () => {
-    const [state, dispatch] = useReducer(
-        Reducer,
-        {
-            username: "",
-            playerState: []
-        }
-    )
+    const [state, dispatch] = useReducer(Reducer, defaultState)
 
     return (
         <WebSocketContext.WebSocketProvider>
