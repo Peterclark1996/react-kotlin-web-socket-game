@@ -2,6 +2,7 @@ FROM node:13.12.0-alpine AS nodeBuilder
 COPY /block-drop-client /app
 
 WORKDIR /app
+RUN npm install
 RUN npm run build
 
 FROM gradle:jdk15 AS kotlinBuilder
