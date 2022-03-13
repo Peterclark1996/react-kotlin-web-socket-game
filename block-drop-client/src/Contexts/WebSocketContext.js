@@ -81,7 +81,6 @@ export const WebSocketProvider = props => {
 
         if(connectionState === ConnectionStateType.CONNECTING || connectionState === ConnectionStateType.OPEN) return
 
-        console.log("Socket connecting to:", socketUrl)
         setConnectionState(ConnectionStateType.CONNECTING)
 
         const reconnectToSocketOnClose = (reason, retries = maxRetries) => {
@@ -96,8 +95,6 @@ export const WebSocketProvider = props => {
             }
 
             const nextAmountOfRetries = retries - 1
-            const retryCooldownText = ` ${nextAmountOfRetries} retr${nextAmountOfRetries === 1 ? "y" : "ies"} remaining.`
-            console.log(`Socket closed. Reconnect will be attempted in 3 seconds.${limitedRetries ? retryCooldownText : ""}`, reason)
             setTimeout(() => {
                 connectToSocket(socketUrl, nextAmountOfRetries)
             }, 3000)
@@ -106,7 +103,6 @@ export const WebSocketProvider = props => {
         const newConnection = new WebSocket(socketUrl)
         
         newConnection.onopen = () => {
-            console.log("Socket connected")
             setConnection(newConnection)
             setConnectionState(ConnectionStateType.OPEN)
             setHasFailedToConnect(false)
