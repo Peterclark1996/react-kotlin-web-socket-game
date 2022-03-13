@@ -14,7 +14,7 @@ RUN gradle build --no-daemon
 FROM openjdk:15.0.2-jdk AS default
 COPY --from=kotlinBuilder /home/gradle/default/build/libs/*.jar /block-drop-server.jar
 RUN mkdir client
-COPY --from=nodeBuilder /app/build/* /client
+COPY --from=nodeBuilder /app/build/* /client/
 
 EXPOSE 8080:8080
 

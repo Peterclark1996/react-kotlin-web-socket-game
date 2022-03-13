@@ -54,7 +54,7 @@ fun Application.module() {
             } catch (e: Exception) {
                 println("ERROR: $e")
             } finally {
-                serverState.disconnectConnection(currentConnection, serverState)
+                serverState.disconnectConnection(currentConnection)
             }
         }
     }
@@ -91,7 +91,7 @@ suspend inline fun <reified T : Receivable> decodeAndProcessEvent(
         )
     }
 
-suspend fun ServerState.disconnectConnection(connection: Connection, serverState: ServerState) {
+suspend fun ServerState.disconnectConnection(connection: Connection) {
     this.removeConnection(connection)
     val room = this.getRooms().find { it.roomCode == connection.roomCode }
     if (room != null) {
