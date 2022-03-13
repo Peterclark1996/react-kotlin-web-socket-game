@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 
-const socketUrl = "ws://localhost:8080/room"
+const getSocketUrl = () => {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        return "ws://localhost:8080/room"
+    }
+    return `ws://${window.location.host}/room`
+}
+
 const limitedRetries = false
 const maxRetries = 5
 
@@ -117,7 +123,7 @@ export const WebSocketProvider = props => {
         }
     }, [connection, connectionState, hasFailedToConnect, onEventReceived])
 
-    useEffect(() => connectToSocket(socketUrl), [connectToSocket])
+    useEffect(() => connectToSocket(getSocketUrl()), [connectToSocket])
 
     const value = {
         connectionState,

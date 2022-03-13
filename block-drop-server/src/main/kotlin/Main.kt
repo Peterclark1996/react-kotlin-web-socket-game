@@ -6,6 +6,7 @@ import events.inbound.*
 import events.outbound.OutboundRoomUsersUpdated
 import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
+import io.ktor.http.content.*
 import io.ktor.routing.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
@@ -14,6 +15,7 @@ import logic.getAllUsersInRoom
 import logic.sendToRoom
 import state.Connection
 import state.ServerState
+import java.io.File
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
@@ -22,6 +24,19 @@ fun Application.module() {
     routing {
         val serverState = ServerState()
         println("Server started")
+
+        static {
+            staticRootFolder = File("client")
+            static("static/css") {
+                files("css")
+            }
+            static("static/js") {
+                files("js")
+            }
+            file("manifest.json")
+            file("logo192.png")
+            default("index.html")
+        }
 
         webSocket("/room") {
             val currentConnection = Connection(this)
