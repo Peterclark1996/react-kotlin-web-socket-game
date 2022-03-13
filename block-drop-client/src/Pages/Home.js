@@ -35,7 +35,7 @@ const Home = ({ dispatch }) => {
 
     useEffect(() => {
         on(
-            "OutboundUserJoinedRoomSuccess", 
+            "OutboundUserTriedToJoinRoomSuccess", 
             eventData => {
                 dispatch({ type: ActionTypes.USERNAME_UPDATED, updatedUsername: eventData.username })
                 history.push(`${ROUTE_ROOM}/${eventData.room}`)
