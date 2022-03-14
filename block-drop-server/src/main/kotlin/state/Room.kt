@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logic.*
 
-const val DELAY_BETWEEN_TICKS: Long = 200
+const val DELAY_BETWEEN_TICKS: Long = 100
 
 class Room(val roomCode: String) {
     private var running = false

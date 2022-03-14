@@ -157,7 +157,7 @@ private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles)
 
 private fun Block.handleVerticalMovement(player: PlayerState, gameState: GameState): Block? =
     when {
-        (player.connection.pressingDown || gameState.currentTick % 5 == 0) &&
+        (player.connection.pressingDown || gameState.currentTick % gameState.getTicksBetweenGravity() == 0) &&
                 canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) ->
             translateBlockDown(this)
         !canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) -> {
@@ -203,3 +203,12 @@ private fun GameState.getTilesWithoutCompletedRows(): Tiles {
 
     return tilesWithSpawnBlocks
 }
+
+private fun GameState.getTicksBetweenGravity() =
+    when{
+        this.currentTick < 100 -> 5
+        this.currentTick < 500 -> 4
+        this.currentTick < 1000 -> 3
+        this.currentTick < 3000 -> 2
+        else -> 1
+    }
