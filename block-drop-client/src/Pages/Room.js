@@ -29,6 +29,7 @@ const Room = ({ state, dispatch }) => {
     }
 
     const onJoinGameClicked = () => {
+        dispatch({ type: ActionTypes.RESET_STATE })
         send("InboundUserTriedToJoinRoom", {
             room: roomCode,
             username: usernameInput

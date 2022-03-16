@@ -21,6 +21,7 @@ const Home = ({ dispatch }) => {
     const [errorMessage, setErrorMessage] = useState("")
 
     const onJoinGameClicked = () => {
+        dispatch({ type: ActionTypes.RESET_STATE })
         send("InboundUserTriedToJoinRoom", {
             room: roomCodeInput,
             username: usernameInput
@@ -28,6 +29,7 @@ const Home = ({ dispatch }) => {
     }
 
     const onCreateGameClicked = () => {
+        dispatch({ type: ActionTypes.RESET_STATE })
         send("InboundUserTriedToCreateRoom", {
             username: usernameInput
         })
