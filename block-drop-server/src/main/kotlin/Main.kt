@@ -76,6 +76,8 @@ suspend fun processEvent(
             decodeAndProcessEvent<InboundUpdatePressedKey>(event.jsonData, currentConnection, serverState)
         "InboundUserStartedGame" ->
             decodeAndProcessEvent<InboundUserStartedGame>(event.jsonData, currentConnection, serverState)
+        "InboundUserLeftRoom" ->
+            decodeAndProcessEvent<InboundUserLeftRoom>(event.jsonData, currentConnection, serverState)
         else -> Error("Event type not recognised: ${event.type}").toLeft()
     }
 

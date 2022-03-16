@@ -12,6 +12,7 @@ const GameButtons = ({ hasGameStarted, dispatch }) => {
     }
 
     const onLeaveGameClicked = () => {
+        send("InboundUserLeftRoom", {})
         dispatch({ type: ActionTypes.RESET_STATE })
         history.push(`${ROUTE_HOME}`)
     }
