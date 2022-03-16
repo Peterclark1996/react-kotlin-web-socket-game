@@ -63,7 +63,7 @@ fun updateBlockPositionForConnection(
 ): GameState {
     val player = gameState.players.find { it.connection == connection } ?: return gameState
     val block = player.block ?: return gameState
-    if (canTransformBlock(block, gameState.mapTiles, moveF)) {
+    if (canTransformBlock(block, gameState, player.id, true, moveF)) {
         val updatedPlayer = PlayerState(
             player.id,
             player.connection,
@@ -129,7 +129,7 @@ fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerS
     }
 
     val blockAfterAllMovement = player.block
-        .handleHorizontalMovement(player, this.mapTiles)
+        .handleHorizontalMovement(player, this)
         .handleVerticalMovement(player, this)
     return PlayerState(
         player.id,
@@ -142,15 +142,15 @@ fun GameState.getNextPlayerStateAfterBlockMovement(player: PlayerState): PlayerS
     )
 }
 
-private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles): Block =
+private fun Block.handleHorizontalMovement(player: PlayerState, gameState: GameState): Block =
     when {
         !player.blockHorizontalMovementThisTick &&
                 player.connection.pressingLeft &&
-                canTransformBlock(this, mapTiles, ::translateBlockLeft) ->
+                canTransformBlock(this, gameState, player.id, true, ::translateBlockLeft) ->
             translateBlockLeft(this)
         !player.blockHorizontalMovementThisTick &&
                 player.connection.pressingRight &&
-                canTransformBlock(this, mapTiles, ::translateBlockRight) ->
+                canTransformBlock(this, gameState, player.id, true, ::translateBlockRight) ->
             translateBlockRight(this)
         else -> this
     }
@@ -158,9 +158,9 @@ private fun Block.handleHorizontalMovement(player: PlayerState, mapTiles: Tiles)
 private fun Block.handleVerticalMovement(player: PlayerState, gameState: GameState): Block? =
     when {
         (player.connection.pressingDown || gameState.currentTick % gameState.getTicksBetweenGravity() == 0) &&
-                canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) ->
+                canTransformBlock(this, gameState, player.id, true, ::translateBlockDown) ->
             translateBlockDown(this)
-        !canTransformBlock(this, gameState.mapTiles, ::translateBlockDown) -> {
+        !canTransformBlock(this, gameState, player.id,false, ::translateBlockDown) -> {
             gameState.stampOntoTiles(player.id, this)
             null
         }
