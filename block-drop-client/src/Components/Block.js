@@ -6,7 +6,7 @@ const Block = ({ colour }) => {
     return(
         <div className="p-1" style={{"backgroundColor": colour}}>
             <div className="bg-light p-1">
-                <div className="p-2" style={{"backgroundColor": colour}}></div>
+                <div className="p-2" style={{"backgroundColor": colour}} />
             </div>
         </div>
     )

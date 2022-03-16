@@ -4,19 +4,9 @@ import { useEffect, useState } from 'react'
 import { generateHtmlId } from '../helpers'
 import ActionTypes from "../Reducer/ActionTypes"
 import GameSide from "../Components/GameSide"
+import BlockColours from "../Enums/BlockColours"
 
 const GameStateUpdatedEventId = generateHtmlId()
-
-const blockColours = [
-    "#FFFFFF",
-    "#FFA9A9",
-    "#A9BAFF",
-    "#A9FFBA",
-    "#F1FFA9",
-    "#EFA9FF",
-    "#6D43A9",
-    "#C69437"   
-]
 
 const Game = ({ dispatch }) => {
     const { on } = useWebSocket()
@@ -51,7 +41,7 @@ const Game = ({ dispatch }) => {
                                     if(cell === -1){
                                         return <Block key={`cell-${rowIndex}-${cellIndex}`} colour="#B7B7B7" />
                                     }
-                                    return <Block key={`cell-${rowIndex}-${cellIndex}`} colour={blockColours[cell]} />
+                                    return <Block key={`cell-${rowIndex}-${cellIndex}`} colour={BlockColours[cell]} />
                                 })
                             }
                         </div>

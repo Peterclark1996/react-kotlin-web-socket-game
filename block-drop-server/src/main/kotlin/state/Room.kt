@@ -66,7 +66,7 @@ class Room(val roomCode: String) {
                     nullSafeCurrentGameState.currentTick,
                     nullSafeCurrentGameState.getTilesWithBlocks(),
                     nullSafeCurrentGameState.players.map {
-                        Player(it.connection.username ?: "Unknown Player", it.score, it.isDead)
+                        Player(it.id, it.connection.username ?: "Unknown Player", it.score, it.isDead)
                     }.toSet()
                 )
             )
