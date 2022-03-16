@@ -67,7 +67,7 @@ const Room = ({ state, dispatch }) => {
                         <div className="d-flex flex-column p-3 align-items-center">
                             <div className="d-flex w-100 mb-2">
                                 <div className="btn border me-5" onClick={onBackButtonClicked}>Back</div>
-                                <span>Joining game '{roomCode}'</span>
+                                <span>Joining room '{roomCode}'</span>
                             </div>
                             <LineBreak />
                             <div className="d-flex justify-content-end ms-auto mb-2">
@@ -82,7 +82,7 @@ const Room = ({ state, dispatch }) => {
                     </Overlay> :
                     <div className="d-flex w-100">
                         <div className="SidePanel">
-                            <LeftPanel state={state} dispatch={dispatch} hasGameStarted={hasGameStarted} />
+                            <LeftPanel state={state} dispatch={dispatch} roomCode={roomCode} hasGameStarted={hasGameStarted} />
                         </div>
                         <div className="MainPanel">
                             <Game dispatch={dispatch} />

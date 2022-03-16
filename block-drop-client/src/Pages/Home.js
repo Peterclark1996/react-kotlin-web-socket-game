@@ -75,7 +75,7 @@ const Home = ({ dispatch }) => {
                     </div>
                     <LineBreak />
                     <div className="d-flex mb-2">
-                        <span className="me-2">Code:</span>
+                        <span className="me-2">Room Code:</span>
                         <input value={roomCodeInput} onChange={event => setRoomCodeInput(event.target.value)}/>
                         <div className="ms-2 btn border" onClick={onJoinGameClicked}>Join Game</div>
                     </div>
